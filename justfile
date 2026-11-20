@@ -36,6 +36,15 @@ readme:
 site:
     NOT_CRAN=true Rscript -e 'pkgdown::build_site(new_process = FALSE, install = TRUE)'
 
+# Rebuild the changed pages of the site and serve it at http://localhost:<port>.
+# Re-run after editing. Examples: `just preview`, `just preview 8000`,
+# `just preview 4321 true` (rebuild every page)
+preview port="4321" full="false":
+    NOT_CRAN=true Rscript -e 'pkgdown::build_site(new_process = FALSE, install = TRUE, lazy = !as.logical("{{ full }}"), preview = FALSE)'
+    @echo "Serving docs/ at http://localhost:{{ port }} (Ctrl-C to stop)"
+    @(sleep 1 && open "http://localhost:{{ port }}" 2>/dev/null || xdg-open "http://localhost:{{ port }}" 2>/dev/null || true) &
+    python3 -m http.server {{ port }} --bind 127.0.0.1 --directory docs
+
 # Re-vendor the Rust crates and regenerate inst/AUTHORS
 vendor:
     PATH="$HOME/.cargo/bin:$PATH" ./tools/vendor.sh
