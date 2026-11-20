@@ -1,0 +1,10 @@
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source."git+https://github.com/apple/embedding-atlas?rev=a0d0f0938db386a86dc855182df3432e1814891d"]
+git = "https://github.com/apple/embedding-atlas"
+rev = "a0d0f0938db386a86dc855182df3432e1814891d"
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "vendor"

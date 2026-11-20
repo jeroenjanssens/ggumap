@@ -1,0 +1,10 @@
+linters: linters_with_defaults(
+    line_length_linter(150),
+    object_name_linter(styles = c("snake_case", "CamelCase", "symbols", "dotted.case")),
+    object_usage_linter = NULL
+  )
+exclusions: list(
+    "R/extendr-wrappers.R",
+    "R/import-standalone-obj-type.R",
+    "R/import-standalone-types-check.R"
+  )

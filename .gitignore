@@ -1,0 +1,14 @@
+src/rust/vendor
+src/Makevars
+src/Makevars.win
+bench/data/
+bench/results/embeddings/
+docs
+.Rproj.user
+.Rhistory
+.RData
+.DS_Store
+/doc/
+/Meta/
+/.dev/
+bench/results/*.log

@@ -1,0 +1,32 @@
+# Compares the speed of the pull request with its base branch.
+on:
+  pull_request:
+    paths: ['src/**', 'R/**', 'DESCRIPTION', 'bench/**']
+
+name: benchmark
+
+permissions: read-all
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::callr, any::withr
+          needs: benchmark
+      - name: Install base and head versions
+        run: |
+          mkdir -p /tmp/lib-base /tmp/lib-head
+          R CMD INSTALL --library=/tmp/lib-head .
+          git worktree add /tmp/base ${{ github.event.pull_request.base.sha }}
+          R CMD INSTALL --library=/tmp/lib-base /tmp/base
+      - name: Benchmark
+        run: Rscript bench/regression.R /tmp/lib-base /tmp/lib-head "$GITHUB_STEP_SUMMARY"

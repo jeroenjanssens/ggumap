@@ -1,0 +1,32 @@
+[package]
+name = 'ggumap'
+publish = false
+version = '0.1.0'
+edition = '2021'
+rust-version = '1.90'
+
+[lib]
+crate-type = ['rlib', 'staticlib']
+name = 'ggumap'
+
+[[bin]]
+name = 'document'
+path = 'document.rs'
+
+[dependencies]
+extendr-api = '0.9'
+extendr-ffi = '0.9'
+ndarray = '0.17'
+rayon = '1.11'
+# Apple's Rust port of umap-learn, pinned to a commit on `main`.
+# Bump with tools/update-upstream.R.
+umap = { git = 'https://github.com/apple/embedding-atlas', rev = 'a0d0f0938db386a86dc855182df3432e1814891d', default-features = false }
+
+[profile.release]
+lto = true
+codegen-units = 1
+
+# devtools::load_all() builds the debug profile; optimise the dependencies
+# anyway so that tests and interactive development run at full speed.
+[profile.dev.package."*"]
+opt-level = 3

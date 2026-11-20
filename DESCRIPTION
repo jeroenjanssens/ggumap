@@ -1,0 +1,47 @@
+Package: ggumap
+Title: UMAP Layers for 'ggplot2'
+Version: 0.1.0
+Authors@R: c(
+    person("Jeroen", "Janssens", , "jeroen@jeroenjanssens.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-5878-8924")),
+    person("Apple Inc.", role = "cph",
+           comment = "Rust implementation of UMAP and NNDescent ('embedding-atlas')"),
+    person("Authors of the dependency Rust crates", role = "ctb",
+           comment = "see inst/AUTHORS")
+  )
+Description: Adds a statistic and a geometry to 'ggplot2' that compute
+    Uniform Manifold Approximation and Projection (UMAP) embeddings
+    (McInnes, Healy and Melville (2018) <doi:10.48550/arXiv.1802.03426>)
+    directly inside a plot. Feature columns are selected with 'tidyselect'
+    syntax. Computation is done by Apple's multi-threaded Rust port of
+    'umap-learn' and 'PyNNDescent', bundled with the package.
+License: MIT + file LICENSE
+URL: https://ggumap.jeroenjanssens.com/, https://github.com/jeroenjanssens/ggumap
+BugReports: https://github.com/jeroenjanssens/ggumap/issues
+Depends:
+    R (>= 4.2)
+Imports:
+    cli (>= 3.6.0),
+    ggplot2 (>= 3.5.0),
+    rlang (>= 1.1.0),
+    tidyselect (>= 1.2.0),
+    vctrs (>= 0.6.0)
+Suggests:
+    callr,
+    knitr,
+    palmerpenguins,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    tibble,
+    uwot,
+    vdiffr (>= 1.0.0),
+    withr
+VignetteBuilder:
+    knitr
+Config/testthat/edition: 3
+Config/testthat/parallel: false
+Config/rextendr/version: 0.5.0
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+SystemRequirements: Cargo (Rust's package manager), rustc >= 1.90
+Config/roxygen2/version: 8.1.1

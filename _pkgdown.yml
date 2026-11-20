@@ -1,0 +1,25 @@
+url: https://ggumap.jeroenjanssens.com/
+template:
+  bootstrap: 5
+
+reference:
+  - title: Layers
+    contents:
+      - stat_umap
+      - theme_umap
+  - title: Embeddings
+    contents:
+      - umap_embed
+  - title: Settings
+    contents:
+      - umap_control
+      - umap_threads
+      - umap_cache_clear
+
+articles:
+  - title: Articles
+    navbar: ~
+    contents:
+      - ggumap
+      - articles/parameters
+      - articles/benchmarks
