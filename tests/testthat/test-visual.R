@@ -39,6 +39,7 @@ test_that("plots look as expected", {
         size = 2
       )
   )
+  skip_if_not_installed("MASS")
   vdiffr::expect_doppelganger(
     "density of umap_embed",
     ggplot2::ggplot(umap_embed(df, seed = 1), ggplot2::aes(UMAP1, UMAP2)) +

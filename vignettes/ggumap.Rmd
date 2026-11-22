@@ -89,7 +89,7 @@ Geoms that compute their own statistic, such as densities or hexagonal bins,
 can't be combined with `stat_umap()`: ggplot2 runs one statistic per layer.
 Compute the embedding with `umap_embed()` and use the regular geom instead:
 
-```{r density}
+```{r density, eval = requireNamespace("MASS", quietly = TRUE)}
 emb <- umap_embed(penguins, bill_length_mm:body_mass_g, scale = TRUE, seed = 1)
 ggplot(emb, aes(UMAP1, UMAP2)) +
   geom_density_2d_filled(contour_var = "ndensity") +

@@ -6,7 +6,7 @@
 \alias{ggumap-package}
 \title{ggumap: UMAP Layers for 'ggplot2'}
 \description{
-Adds a statistic and a geometry to 'ggplot2' that compute Uniform Manifold Approximation and Projection (UMAP) embeddings (McInnes, Healy and Melville (2018) \doi{10.48550/arXiv.1802.03426}) directly inside a plot. Feature columns are selected with 'tidyselect' syntax. Computation is done by Apple's multi-threaded Rust port of 'umap-learn' and 'PyNNDescent', bundled with the package.
+Adds a statistic and a geometry to 'ggplot2' that compute Uniform Manifold Approximation and Projection (UMAP) embeddings (McInnes, Healy and Melville (2018) \doi{10.48550/arXiv.1802.03426}) directly inside a plot. Feature columns are selected with 'tidyselect' syntax. Computation is done by Apple's multi-threaded 'Rust' port of 'umap-learn' and 'PyNNDescent', bundled with the package.
 }
 \seealso{
 Useful links:

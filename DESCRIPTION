@@ -13,9 +13,11 @@ Description: Adds a statistic and a geometry to 'ggplot2' that compute
     Uniform Manifold Approximation and Projection (UMAP) embeddings
     (McInnes, Healy and Melville (2018) <doi:10.48550/arXiv.1802.03426>)
     directly inside a plot. Feature columns are selected with 'tidyselect'
-    syntax. Computation is done by Apple's multi-threaded Rust port of
+    syntax. Computation is done by Apple's multi-threaded 'Rust' port of
     'umap-learn' and 'PyNNDescent', bundled with the package.
 License: MIT + file LICENSE
+Copyright: See file inst/AUTHORS for the bundled 'Rust' crates and their
+    authors.
 URL: https://ggumap.jeroenjanssens.com/, https://github.com/jeroenjanssens/ggumap
 BugReports: https://github.com/jeroenjanssens/ggumap/issues
 Depends:
@@ -29,6 +31,7 @@ Imports:
 Suggests:
     callr,
     knitr,
+    MASS,
     palmerpenguins,
     rmarkdown,
     testthat (>= 3.0.0),
@@ -42,6 +45,7 @@ Config/testthat/edition: 3
 Config/testthat/parallel: false
 Config/rextendr/version: 0.5.0
 Encoding: UTF-8
+Language: en-GB
 Roxygen: list(markdown = TRUE)
 SystemRequirements: Cargo (Rust's package manager), rustc >= 1.90
 Config/roxygen2/version: 8.1.1

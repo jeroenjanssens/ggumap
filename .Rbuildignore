@@ -24,3 +24,5 @@
 ^dev$
 ^CODE_OF_CONDUCT\.md$
 ^justfile$
+^CRAN-SUBMISSION$
+^\.claude$

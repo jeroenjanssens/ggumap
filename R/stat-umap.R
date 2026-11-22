@@ -83,6 +83,10 @@
 #' # Geoms with their own statistic (densities, binning) need umap_embed()
 #' emb <- umap_embed(iris, seed = 1)
 #' ggplot(emb, aes(UMAP1, UMAP2)) +
+#'   geom_bin_2d(bins = 20)
+#'
+#' @examplesIf rlang::is_installed("MASS")
+#' ggplot(emb, aes(UMAP1, UMAP2)) +
 #'   geom_density_2d_filled(contour_var = "ndensity")
 stat_umap <- function(
   mapping = NULL,
