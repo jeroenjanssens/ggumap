@@ -13,7 +13,8 @@ A positive integer.
 Returns the default number of threads for UMAP computations. This is the
 option \code{ggumap.n_threads} or the environment variable \code{GGUMAP_NUM_THREADS}
 if set, and half of the available cores otherwise. It is limited to 2 when
-\verb{_R_CHECK_LIMIT_CORES_} is set (as during \verb{R CMD check}).
+\verb{_R_CHECK_LIMIT_CORES_} is set (as during \verb{R CMD check}), and to
+\code{OMP_THREAD_LIMIT} when that environment variable is set.
 }
 \details{
 With \code{flavour = "0.5"} results are only bit-for-bit reproducible when

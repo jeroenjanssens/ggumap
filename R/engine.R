@@ -189,7 +189,8 @@ hash <- function(x) rlang::hash(x)
 #' Returns the default number of threads for UMAP computations. This is the
 #' option `ggumap.n_threads` or the environment variable `GGUMAP_NUM_THREADS`
 #' if set, and half of the available cores otherwise. It is limited to 2 when
-#' `_R_CHECK_LIMIT_CORES_` is set (as during `R CMD check`).
+#' `_R_CHECK_LIMIT_CORES_` is set (as during `R CMD check`), and to
+#' `OMP_THREAD_LIMIT` when that environment variable is set.
 #'
 #' With `flavour = "0.5"` results are only bit-for-bit reproducible when
 #' `n_threads = 1`. With `flavour = "0.6"` they are reproducible for a given
@@ -216,6 +217,10 @@ umap_threads <- function() {
   limit <- Sys.getenv("_R_CHECK_LIMIT_CORES_")
   if (nzchar(limit) && !identical(toupper(limit), "FALSE")) {
     n <- min(n, 2L)
+  }
+  omp <- suppressWarnings(as.integer(Sys.getenv("OMP_THREAD_LIMIT")))
+  if (!is.na(omp) && omp >= 1L) {
+    n <- min(n, omp)
   }
   n
 }

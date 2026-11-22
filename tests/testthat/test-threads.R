@@ -1,12 +1,16 @@
 test_that("umap_threads() respects the option", {
   withr::local_options(ggumap.n_threads = 3L)
-  withr::local_envvar(`_R_CHECK_LIMIT_CORES_` = "")
+  withr::local_envvar(`_R_CHECK_LIMIT_CORES_` = "", OMP_THREAD_LIMIT = "")
   expect_equal(umap_threads(), 3L)
 })
 
 test_that("umap_threads() respects the environment variable", {
   withr::local_options(ggumap.n_threads = NULL)
-  withr::local_envvar(GGUMAP_NUM_THREADS = "3", `_R_CHECK_LIMIT_CORES_` = "")
+  withr::local_envvar(
+    GGUMAP_NUM_THREADS = "3",
+    `_R_CHECK_LIMIT_CORES_` = "",
+    OMP_THREAD_LIMIT = ""
+  )
   expect_equal(umap_threads(), 3L)
   withr::local_envvar(GGUMAP_NUM_THREADS = "abc")
   expect_gte(umap_threads(), 1L)
@@ -14,15 +18,29 @@ test_that("umap_threads() respects the environment variable", {
 
 test_that("umap_threads() defaults to half the cores", {
   withr::local_options(ggumap.n_threads = NULL)
-  withr::local_envvar(GGUMAP_NUM_THREADS = "", `_R_CHECK_LIMIT_CORES_` = "")
+  withr::local_envvar(
+    GGUMAP_NUM_THREADS = "",
+    `_R_CHECK_LIMIT_CORES_` = "",
+    OMP_THREAD_LIMIT = ""
+  )
   expect_equal(umap_threads(), max(1L, umap_rs_info()$max_threads %/% 2L))
 })
 
 test_that("umap_threads() is limited during R CMD check", {
   withr::local_options(ggumap.n_threads = 64L)
-  withr::local_envvar(`_R_CHECK_LIMIT_CORES_` = "TRUE")
+  withr::local_envvar(`_R_CHECK_LIMIT_CORES_` = "TRUE", OMP_THREAD_LIMIT = "")
   expect_equal(umap_threads(), 2L)
   withr::local_envvar(`_R_CHECK_LIMIT_CORES_` = "false")
+  expect_equal(umap_threads(), 64L)
+})
+
+test_that("umap_threads() is limited by OMP_THREAD_LIMIT", {
+  withr::local_options(ggumap.n_threads = 64L)
+  withr::local_envvar(`_R_CHECK_LIMIT_CORES_` = "", OMP_THREAD_LIMIT = "3")
+  expect_equal(umap_threads(), 3L)
+  withr::local_envvar(OMP_THREAD_LIMIT = "abc")
+  expect_equal(umap_threads(), 64L)
+  withr::local_envvar(OMP_THREAD_LIMIT = "0")
   expect_equal(umap_threads(), 64L)
 })
 
