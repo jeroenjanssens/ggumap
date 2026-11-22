@@ -12,3 +12,4 @@ docs
 /Meta/
 /.dev/
 bench/results/*.log
+tests/testthat/Rplots.pdf

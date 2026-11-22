@@ -37,8 +37,9 @@ ggplot(palmerpenguins::penguins, aes(colour = species)) +
 
 * **Tidy feature selection.** Choose the input columns with `features`, using
   `dplyr::select()` syntax. All numeric columns are used by default.
-* **Any geom.** `stat_umap(geom = "text")`, `"label"`, `"density_2d_filled"`,
-  ... Aesthetics are carried along row by row and never split the embedding.
+* **Points, text, labels.** `geom_umap()` draws points, and
+  `stat_umap(geom = "text")` or `"label"` annotate them. Aesthetics are carried
+  along row by row and never split the embedding.
 * **Fast.** The computation is done by Apple's multi-threaded Rust port of
   umap-learn and PyNNDescent, from
   [embedding-atlas](https://github.com/apple/embedding-atlas).

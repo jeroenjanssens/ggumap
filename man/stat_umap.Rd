@@ -75,7 +75,7 @@ will be used as the layer data. A \code{function} can be created
 from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
 \item{geom}{The geometric object to display the embedding, as a string
-(e.g. \code{"point"}, \code{"text"}, \code{"density_2d"}) or a \code{Geom} object.}
+(e.g. \code{"point"}, \code{"text"}, \code{"label"}) or a \code{Geom} object.}
 
 \item{position}{A position adjustment to use on the data for this layer. This
 can be used in various ways, including to prevent overplotting and
@@ -221,9 +221,8 @@ ggplot(iris, aes(colour = Species)) +
   geom_umap() +
   facet_wrap(vars(Species))
 
-\donttest{
-# Density of the embedding
-ggplot(iris) +
-  stat_umap(geom = "density_2d_filled", contour_var = "ndensity")
-}
+# Geoms with their own statistic (densities, binning) need umap_embed()
+emb <- umap_embed(iris, seed = 1)
+ggplot(emb, aes(UMAP1, UMAP2)) +
+  geom_density_2d_filled(contour_var = "ndensity")
 }

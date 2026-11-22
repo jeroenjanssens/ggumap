@@ -36,7 +36,7 @@
 #' @inheritParams ggplot2::stat_identity
 #' @inheritParams umap_embed
 #' @param geom The geometric object to display the embedding, as a string
-#'   (e.g. `"point"`, `"text"`, `"density_2d"`) or a `Geom` object.
+#'   (e.g. `"point"`, `"text"`, `"label"`) or a `Geom` object.
 #' @param features <[`tidy-select`][tidyselect::language]> Columns of the
 #'   layer data to use as UMAP input. Defaults to all numeric columns.
 #'   Columns used by mapped aesthetics are only included if they are
@@ -80,11 +80,10 @@
 #'   geom_umap() +
 #'   facet_wrap(vars(Species))
 #'
-#' \donttest{
-#' # Density of the embedding
-#' ggplot(iris) +
-#'   stat_umap(geom = "density_2d_filled", contour_var = "ndensity")
-#' }
+#' # Geoms with their own statistic (densities, binning) need umap_embed()
+#' emb <- umap_embed(iris, seed = 1)
+#' ggplot(emb, aes(UMAP1, UMAP2)) +
+#'   geom_density_2d_filled(contour_var = "ndensity")
 stat_umap <- function(
   mapping = NULL,
   data = NULL,
@@ -208,6 +207,7 @@ new_umap_layer <- function(
   inherit.aes,
   call = caller_env()
 ) {
+  check_umap_geom(geom, call = call)
   flavour <- arg_match(flavour, umap_flavours, error_call = call)
   scope <- arg_match(scope, c("layer", "panel"), error_call = call)
   check_bool(na.rm, call = call)
@@ -272,6 +272,12 @@ umap_layer <- function(
         self$computed_mapping,
         own = names(self$mapping)
       )
+      # Tag every row before facets run: a layer without the facet variables
+      # is copied into every panel, and each observation must be embedded
+      # once, not once per copy.
+      if (is.data.frame(data) && nrow(data) > 0) {
+        data$.umap_row <- seq_len(nrow(data))
+      }
       data
     },
     compute_aesthetics = function(self, data, plot) {
@@ -289,8 +295,63 @@ umap_layer <- function(
       )
       colnames(x) <- paste0(".umap_f", seq_len(ncol(x)))
       evaled[colnames(x)] <- as.data.frame(x)
+      evaled$.umap_row <- data$.umap_row %||% seq_len(nrow(data))
       evaled
     }
+  )
+}
+
+# Geoms that only work with their own statistic (density estimation, binning,
+# smoothing, summaries). ggplot2 runs one statistic per layer, so these cannot
+# be combined with stat_umap().
+stat_dependent_geoms <- c(
+  "GeomDensity2d",
+  "GeomDensity2dFilled",
+  "GeomContour",
+  "GeomContourFilled",
+  "GeomHex",
+  "GeomBin2d",
+  "GeomSmooth",
+  "GeomBoxplot",
+  "GeomViolin"
+)
+
+check_umap_geom <- function(geom, call = caller_env()) {
+  obj <- geom
+  label <- NULL
+  if (is_string(geom)) {
+    parts <- strsplit(geom, "_", fixed = TRUE)[[1]]
+    camel <- paste0(
+      toupper(substring(parts, 1, 1)),
+      substring(parts, 2),
+      collapse = ""
+    )
+    obj <- get0(
+      paste0("Geom", camel),
+      envir = asNamespace("ggplot2"),
+      inherits = FALSE
+    )
+    label <- geom
+  }
+  if (!inherits(obj, stat_dependent_geoms)) {
+    return(invisible())
+  }
+  # Class name to snake case, e.g. GeomDensity2dFilled becomes density_2d_filled
+  label <- label %||%
+    tolower(gsub(
+      "([a-z])([A-Z0-9])",
+      "\\1_\\2",
+      sub("^Geom", "", class(obj)[[1]])
+    ))
+  cli::cli_abort(
+    c(
+      "{.code geom = \"{label}\"} needs its own statistic, which can't be combined with {.fn stat_umap}.",
+      i = paste(
+        "Compute the embedding with {.fn umap_embed} and plot the result with the regular geom,",
+        "e.g. {.code ggplot(umap_embed(data), aes(UMAP1, UMAP2)) + geom_{label}()}."
+      )
+    ),
+    call = call
   )
 }
 
@@ -352,7 +413,9 @@ StatUmap <- ggplot2::ggproto(
         call = NULL
       )
     }
-    data$row <- seq_len(nrow(data))
+    # Row number in the layer data, also when facets copied rows to panels.
+    data$row <- data$.umap_row %||% seq_len(nrow(data))
+    data$.umap_row <- NULL
     if (identical(params$scope, "panel")) {
       panels <- vec_split(data, data$PANEL)
       out <- lapply(panels$val, function(panel) {
@@ -365,12 +428,26 @@ StatUmap <- ggplot2::ggproto(
       })
       return(vec_rbind(!!!out))
     }
-    self$compute_panel(
-      data,
+    # Embed every observation once, then give all its copies the same
+    # coordinates.
+    first <- !duplicated(data$row)
+    embedded <- self$compute_panel(
+      vec_slice(data, first),
       scales = NULL,
       umap = params$umap,
       na.rm = params$na.rm
     )
+    if (all(first)) {
+      return(embedded)
+    }
+    match_row <- match(data$row, embedded$row)
+    keep <- !is.na(match_row)
+    data <- vec_slice(data[!grepl("^\\.umap_f[0-9]+$", names(data))], keep)
+    match_row <- match_row[keep]
+    data$UMAP1 <- embedded$UMAP1[match_row]
+    data$UMAP2 <- embedded$UMAP2[match_row]
+    data$knn_dist <- embedded$knn_dist[match_row]
+    data
   },
 
   compute_panel = function(

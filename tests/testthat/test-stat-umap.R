@@ -135,24 +135,36 @@ test_that("missing feature values are removed with a warning", {
   expect_silent(layer_data(p))
 })
 
-test_that("other geoms can render the embedding", {
+test_that("geoms that draw one mark per observation render the embedding", {
   df <- blobs()
   df$id <- as.character(seq_len(nrow(df)))
+  emb <- umap_embed(df, seed = 1)
   geoms <- list(
     stat_umap(geom = "text", ggplot2::aes(label = id), seed = 1),
     stat_umap(geom = "label", ggplot2::aes(label = id), seed = 1),
-    stat_umap(geom = "density_2d", seed = 1),
-    stat_umap(geom = "density_2d_filled", seed = 1),
     stat_umap(geom = "path", seed = 1)
   )
   for (layer in geoms) {
     p <- ggplot2::ggplot(df) + layer
     expect_no_error(ggplot2::ggplotGrob(p))
+    # One mark per observation, at the embedded coordinates.
+    ld <- layer_data(p)
+    expect_equal(nrow(ld), nrow(df))
+    expect_equal(ld$x[order(ld$row)], emb$UMAP1)
   }
-  skip_if_not_installed("hexbin")
-  expect_no_error(ggplot2::ggplotGrob(
-    ggplot2::ggplot(df) + stat_umap(geom = "hex", seed = 1)
-  ))
+})
+
+test_that("geoms that need their own statistic are rejected", {
+  expect_snapshot(error = TRUE, {
+    stat_umap(geom = "density_2d_filled")
+    stat_umap(geom = "density2d")
+    stat_umap(geom = "hex")
+    stat_umap(geom = "smooth")
+    stat_umap(geom = ggplot2::GeomContour)
+    stat_umap(geom = ggplot2::GeomDensity2dFilled)
+  })
+  expect_no_error(stat_umap(geom = "text"))
+  expect_no_error(stat_umap(geom = ggplot2::GeomLabel))
 })
 
 test_that("geom parameters and fixed aesthetics are passed on", {
@@ -203,4 +215,50 @@ test_that("theme_umap() removes axis decorations", {
   expect_s3_class(th$axis.text, "element_blank")
   expect_s3_class(th$axis.ticks, "element_blank")
   expect_s3_class(theme_umap(legend.position = "none"), "theme")
+})
+
+test_that("layers copied into every facet panel are embedded once", {
+  # A layer without the facet variable is repeated in every panel. Each
+  # observation must be embedded once, not once per copy.
+  df <- blobs(n_per = 30, k = 3)
+  background <- df
+  background$label <- NULL
+  p <- ggplot2::ggplot(df) +
+    geom_umap(data = background, seed = 1) +
+    geom_umap(seed = 1) +
+    ggplot2::facet_wrap(ggplot2::vars(label))
+  copied <- layer_data(p, 1)
+  own <- layer_data(p, 2)
+  expect_equal(nrow(copied), 3 * nrow(df))
+  expect_setequal(copied$row, seq_len(nrow(df)))
+
+  # Every copy of an observation has the same coordinates ...
+  coords <- unique(copied[c("row", "x", "y")])
+  expect_equal(nrow(coords), nrow(df))
+  # ... which match the embedding without facets, and the faceted layer.
+  whole <- layer_data(ggplot2::ggplot(df) + geom_umap(seed = 1))
+  coords <- coords[order(coords$row), ]
+  expect_equal(coords$x, whole$x)
+  expect_equal(own$x[order(own$row)], whole$x)
+  # The embedding is still faithful (not degenerate from duplicated rows).
+  expect_gt(knn_accuracy(cbind(coords$x, coords$y), df$label), 0.95)
+})
+
+test_that("missing values in layers copied into panels are dropped from every copy", {
+  df <- blobs(n_per = 20, k = 2)
+  background <- df
+  background$label <- NULL
+  background$f1[1] <- NA
+  p <- ggplot2::ggplot(df) +
+    geom_umap(data = background, seed = 1, na.rm = TRUE) +
+    ggplot2::facet_wrap(ggplot2::vars(label))
+  ld <- layer_data(p, 1)
+  expect_false(1 %in% ld$row)
+  expect_equal(nrow(ld), 2 * (nrow(df) - 1))
+})
+
+test_that("the row computed variable refers to the layer data", {
+  df <- blobs(n_per = 10, k = 2)
+  p <- ggplot2::ggplot(df) + geom_umap(seed = 1)
+  expect_equal(layer_data(p)$row, seq_len(nrow(df)))
 })

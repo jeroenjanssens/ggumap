@@ -29,9 +29,9 @@ ggplot(palmerpenguins::penguins, aes(colour = species)) +
 - **Tidy feature selection.** Choose the input columns with `features`,
   using `dplyr::select()` syntax. All numeric columns are used by
   default.
-- **Any geom.** `stat_umap(geom = "text")`, `"label"`,
-  `"density_2d_filled"`, … Aesthetics are carried along row by row and
-  never split the embedding.
+- **Points, text, labels.** `geom_umap()` draws points, and
+  `stat_umap(geom = "text")` or `"label"` annotate them. Aesthetics are
+  carried along row by row and never split the embedding.
 - **Fast.** The computation is done by Apple’s multi-threaded Rust port
   of umap-learn and PyNNDescent, from
   [embedding-atlas](https://github.com/apple/embedding-atlas).
@@ -75,12 +75,12 @@ plot:
 ``` r
 umap_embed(iris, Sepal.Length:Petal.Width, seed = 1) |> head()
 #>      UMAP1     UMAP2  knn_dist
-#> 1 15.77717 -1.391377 0.2206497
-#> 2 14.09105 -2.769205 0.2788145
-#> 3 14.36441 -2.268250 0.2883166
-#> 4 14.15832 -2.540182 0.2761466
-#> 5 15.65010 -1.255143 0.2452016
-#> 6 16.96546 -1.401339 0.4382381
+#> 1 12.89850  9.066114 0.2206497
+#> 2 15.01168  8.909729 0.2788145
+#> 3 14.62423  8.497745 0.2883166
+#> 4 14.85246  8.678940 0.2761466
+#> 5 12.91833  8.970540 0.2452016
+#> 6 12.09575 10.244448 0.4382381
 ```
 
 See `vignette("ggumap")` for more.

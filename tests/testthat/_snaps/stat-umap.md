@@ -15,6 +15,45 @@
       Warning:
       Removed 3 rows containing missing feature values (`stat_umap()`).
 
+# geoms that need their own statistic are rejected
+
+    Code
+      stat_umap(geom = "density_2d_filled")
+    Condition
+      Error in `stat_umap()`:
+      ! `geom = "density_2d_filled"` needs its own statistic, which can't be combined with `stat_umap()`.
+      i Compute the embedding with `umap_embed()` and plot the result with the regular geom, e.g. `ggplot(umap_embed(data), aes(UMAP1, UMAP2)) + geom_density_2d_filled()`.
+    Code
+      stat_umap(geom = "density2d")
+    Condition
+      Error in `stat_umap()`:
+      ! `geom = "density2d"` needs its own statistic, which can't be combined with `stat_umap()`.
+      i Compute the embedding with `umap_embed()` and plot the result with the regular geom, e.g. `ggplot(umap_embed(data), aes(UMAP1, UMAP2)) + geom_density2d()`.
+    Code
+      stat_umap(geom = "hex")
+    Condition
+      Error in `stat_umap()`:
+      ! `geom = "hex"` needs its own statistic, which can't be combined with `stat_umap()`.
+      i Compute the embedding with `umap_embed()` and plot the result with the regular geom, e.g. `ggplot(umap_embed(data), aes(UMAP1, UMAP2)) + geom_hex()`.
+    Code
+      stat_umap(geom = "smooth")
+    Condition
+      Error in `stat_umap()`:
+      ! `geom = "smooth"` needs its own statistic, which can't be combined with `stat_umap()`.
+      i Compute the embedding with `umap_embed()` and plot the result with the regular geom, e.g. `ggplot(umap_embed(data), aes(UMAP1, UMAP2)) + geom_smooth()`.
+    Code
+      stat_umap(geom = ggplot2::GeomContour)
+    Condition
+      Error in `stat_umap()`:
+      ! `geom = "contour"` needs its own statistic, which can't be combined with `stat_umap()`.
+      i Compute the embedding with `umap_embed()` and plot the result with the regular geom, e.g. `ggplot(umap_embed(data), aes(UMAP1, UMAP2)) + geom_contour()`.
+    Code
+      stat_umap(geom = ggplot2::GeomDensity2dFilled)
+    Condition
+      Error in `stat_umap()`:
+      ! `geom = "density_2d_filled"` needs its own statistic, which can't be combined with `stat_umap()`.
+      i Compute the embedding with `umap_embed()` and plot the result with the regular geom, e.g. `ggplot(umap_embed(data), aes(UMAP1, UMAP2)) + geom_density_2d_filled()`.
+
 # stat = 'umap' without the constructor is an error
 
     Code

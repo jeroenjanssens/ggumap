@@ -40,7 +40,8 @@ test_that("plots look as expected", {
       )
   )
   vdiffr::expect_doppelganger(
-    "density",
-    ggplot2::ggplot(df) + stat_umap(geom = "density_2d_filled", seed = 1)
+    "density of umap_embed",
+    ggplot2::ggplot(umap_embed(df, seed = 1), ggplot2::aes(UMAP1, UMAP2)) +
+      ggplot2::geom_density_2d_filled()
   )
 })

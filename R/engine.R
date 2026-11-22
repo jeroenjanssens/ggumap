@@ -8,7 +8,7 @@ umap_min_rows <- 3L
 
 # Select feature columns with tidyselect and return a double matrix.
 select_features <- function(data, features, call = caller_env()) {
-  data <- data[setdiff(names(data), c("PANEL", "group", ".row"))]
+  data <- data[setdiff(names(data), c("PANEL", "group", ".umap_row"))]
   loc <- tidyselect::eval_select(
     features,
     data,
