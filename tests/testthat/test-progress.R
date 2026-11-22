@@ -47,7 +47,12 @@ test_that("errors in the progress callback stop the computation", {
     ),
     seed = 1
   )
-  expect_error(umap_rs(as.matrix(df[1:8]), params, function(...) stop("boom")))
+  # R_tryEval prints the callback's error before returning it; keep it out
+  # of the test output.
+  expect_error(utils::capture.output(
+    umap_rs(as.matrix(df[1:8]), params, function(...) stop("boom")),
+    type = "message"
+  ))
   # The worker thread was stopped and joined: new computations still work.
   expect_type(umap_rs(as.matrix(df[1:8]), params, NULL), "list")
 })
