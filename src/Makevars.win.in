@@ -20,14 +20,15 @@ $(STATLIB):
 	touch $(TARGET_DIR)/libgcc_mock/libgcc_eh.a
 
   # If a vendor directory exists, it is used for offline compilation. Otherwise if
-  # vendor.tar.xz exists, it is unzipped and used for offline compilation.
+  # vendor.tar.xz exists, it is unpacked (with R's internal tar, which needs
+  # neither tar nor xz on the PATH) and used for offline compilation.
 	if [ -d ./vendor ]; then \
 		echo "=== Using offline vendor directory ==="; \
 		mkdir -p $(CARGOTMP) && \
 		cp rust/vendor-config.toml $(CARGOTMP)/config.toml; \
 	elif [ -f ./rust/vendor.tar.xz ]; then \
 		echo "=== Using offline vendor tarball ==="; \
-		tar xf rust/vendor.tar.xz && \
+		"$(R_HOME)/bin$(R_ARCH_BIN)/Rscript.exe" -e 'untar("rust/vendor.tar.xz", exdir = ".", tar = "internal")' && \
 		mkdir -p $(CARGOTMP) && \
 		cp rust/vendor-config.toml $(CARGOTMP)/config.toml; \
 	fi
