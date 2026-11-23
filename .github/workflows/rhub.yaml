@@ -58,12 +58,18 @@ jobs:
 
     steps:
       - uses: r-hub/actions/checkout@v1
-      # Current stable Rust via rustup, ahead of any older system rustc.
+      # Fedora containers: the distribution's Rust, as on CRAN's Fedora
+      # machines (rustup's rustc proxy hangs when called from the ASAN build
+      # of R). Elsewhere: current stable Rust via rustup.
       - name: Install Rust
         shell: bash
         run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          if command -v dnf > /dev/null; then
+            dnf install -y -q rust cargo
+          else
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          fi
       - uses: r-hub/actions/platform-info@v1
         with:
           token: ${{ secrets.RHUB_TOKEN }}
