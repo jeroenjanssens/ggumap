@@ -4,7 +4,8 @@
 #
 # rhub::rhub_setup()
 #
-# Modified for ggumap: both jobs install a Rust toolchain.
+# Modified for ggumap: both jobs install a Rust toolchain and time out
+# after 90 minutes (a full check takes about 30).
 
 name: R-hub
 run-name: >-
@@ -44,6 +45,7 @@ jobs:
 
   linux-containers:
     needs: setup
+    timeout-minutes: 90
     if: ${{ needs.setup.outputs.containers != '[]' }}
     runs-on: ubuntu-latest
     name: ${{ matrix.config.label }}
@@ -77,6 +79,7 @@ jobs:
 
   other-platforms:
     needs: setup
+    timeout-minutes: 90
     if: ${{ needs.setup.outputs.platforms != '[]' }}
     runs-on: ${{ matrix.config.os }}
     name: ${{ matrix.config.label }}
