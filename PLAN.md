@@ -158,3 +158,9 @@ Status legend: [x] done, [ ] to do, [~] needs Jeroen.
   build time).
 * [~] Optional: report the nosuggests BLAS hang to r-hub/containers.
 * [~] Submit: `devtools::submit_cran()`, confirm the email.
+* 2026-11-24: all benchmarks redone on AC power (Apple M4 Pro, ggumap at
+  81b2d1f): full suite 48 min, README suite 13 min, no failed runs.
+  Committed in b611141 (tooling) and 1c4b64d (results, article, README
+  Performance section). The README's claims still hold. The package
+  tarball gains README-benchmark.png (74 KB) and the README section; the
+  win-builder uploads predate this but the package code is unchanged.
