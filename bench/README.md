@@ -10,7 +10,7 @@ memory and embedding quality. Not part of the package build.
 | `uwot`          | `uwot::umap()` (C++, Annoy nearest neighbours)                      |
 | `umap-naive`    | `umap::umap(method = "naive")`, pure R (what ggpca uses); n ≤ 20k   |
 | `umap-learn-0.5`| Python umap-learn 0.5.x via reticulate (environment managed by uv)  |
-| `umap-learn-0.6`| Python umap-learn 0.6.x via reticulate (environment managed by uv)  |
+| `umap-learn-0.6`| Python umap-learn 0.6.x, modern pipeline (`compatibility_layout = False`: recursive init + Adam), via reticulate |
 
 All contenders use `n_neighbors = 15`, `min_dist = 0.1`, Euclidean distance,
 2 dimensions, default epochs and the same number of threads.

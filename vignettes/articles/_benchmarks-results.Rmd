@@ -5,7 +5,8 @@ cat(sprintf(
   paste(
     "These benchmarks compare ggumap with the other UMAP implementations",
     "available to R users. They were run on %s (%s, %d cores, %s), R %s and %s,",
-    "with %d threads for every contender and %d repetitions per measurement.",
+    "with %d threads for every multi-threaded contender (umap-naive is pure R",
+    "and single-threaded) and %d repetitions per measurement.",
     "All contenders use `n_neighbors = 15`, `min_dist = 0.1`, Euclidean",
     "distance and their default number of epochs. See `bench/README.md` in the",
     "source repository for the methodology.\n\n"
@@ -13,7 +14,35 @@ cat(sprintf(
   machine$date, machine$cpu, machine$cores, machine$os, machine$r, machine$rustc,
   max(res$threads[res$experiment == "datasets"]), max(res$rep)
 ))
-knitr::kable(versions, row.names = FALSE, col.names = c("Contender", "Version"))
+pipelines <- c(
+  `ggumap-0.5` = "classic: spectral initialisation, SGD",
+  `ggumap-0.6` = "modern: recursive initialisation, Adam",
+  uwot = "classic (uwot's implementation, Annoy nearest neighbours)",
+  `umap-naive` = "classic (pure R, exact nearest neighbours)",
+  `umap-learn-0.5` = "classic: spectral initialisation, SGD",
+  `umap-learn-0.6` = "modern: recursive initialisation, Adam (`compatibility_layout = False`)"
+)
+versions$pipeline <- pipelines[as.character(versions$contender)]
+knitr::kable(versions, row.names = FALSE, col.names = c("Contender", "Version", "Pipeline"))
+cat(
+  "\numap-learn 0.6 still runs the classic pipeline by default; it is benchmarked",
+  "here with its modern pipeline, which ggumap's `flavour = \"0.6\"` ports, so",
+  "that each ggumap flavour is compared with its counterpart.\n"
+)
+```
+
+```{r label-helpers}
+# Spread end-of-line labels vertically so that they do not overlap: `y` is in
+# the units of the (possibly log-transformed) axis, `gap` the minimum distance.
+spread_labels <- function(y, gap) {
+  o <- order(y)
+  z <- y[o]
+  for (i in seq_along(z)[-1]) z[i] <- max(z[i], z[i - 1] + gap)
+  z <- z - (mean(z) - mean(y[o]))
+  out <- numeric(length(y))
+  out[o] <- z
+  out
+}
 ```
 
 ## Speed
@@ -21,12 +50,13 @@ knitr::kable(versions, row.names = FALSE, col.names = c("Contender", "Version"))
 ```{r speed}
 blobs <- summarise(subset(res, experiment == "datasets" & dataset == "blobs"), c("contender", "n"))
 ends <- do.call(rbind, lapply(split(blobs, blobs$contender, drop = TRUE), function(d) d[which.max(d$n), ]))
+ends$label_y <- 10^spread_labels(log10(ends$seconds), gap = 0.14)
 
 ggplot(blobs, aes(n, seconds, colour = contender)) +
   geom_line(linewidth = 0.7) +
   geom_point(size = 2.2) +
   geom_text(
-    data = ends, aes(label = contender), colour = "grey20",
+    data = ends, aes(y = label_y, label = contender), colour = "grey20",
     hjust = 0, nudge_x = 0.06, size = 3.2
   ) +
   scale_x_log10(
@@ -66,16 +96,18 @@ names(base)[2] <- "base"
 sc <- merge(sc, base)
 sc$speedup <- sc$base / sc$seconds
 ends <- do.call(rbind, lapply(split(sc, sc$contender, drop = TRUE), function(d) d[which.max(d$threads), ]))
+ends$label_y <- spread_labels(ends$speedup, gap = 0.3)
+n_scaling <- unique(res$n[res$experiment == "scaling"])
 
 ggplot(sc, aes(threads, speedup, colour = contender)) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "grey70", linewidth = 0.4) +
   geom_line(linewidth = 0.7) +
   geom_point(size = 2.2) +
-  geom_text(data = ends, aes(label = contender), colour = "grey20", hjust = 0, nudge_x = 0.2, size = 3.2) +
+  geom_text(data = ends, aes(y = label_y, label = contender), colour = "grey20", hjust = 0, nudge_x = 0.2, size = 3.2) +
   scale_x_continuous(breaks = unique(sc$threads), expand = expansion(mult = c(0.03, 0.3))) +
   scale_colour_manual(values = palette) +
   labs(
-    title = sprintf("Speed-up over one thread (blobs, %s observations)", format(sc$n[1], big.mark = ",")),
+    title = sprintf("Speed-up over one thread (blobs, %s observations)", format(n_scaling, big.mark = ",")),
     subtitle = "Dashed line: perfect scaling.",
     x = "Threads", y = "Speed-up"
   ) +
@@ -99,7 +131,7 @@ ggplot(mem, aes(peak_mb, contender, fill = contender)) +
   scale_fill_manual(values = palette, guide = "none") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
   labs(
-    title = sprintf("Peak memory of the R process (%s, %s observations)", big$dataset[1], format(big$n[1], big.mark = ",")),
+    title = sprintf("Peak memory of the R process (%s, %s observations)", toupper(big$dataset[1]), format(big$n[1], big.mark = ",")),
     subtitle = "Resident set size, including R, the data and (for umap-learn) Python.",
     x = NULL, y = NULL
   ) +
@@ -121,18 +153,26 @@ q <- summarise(subset(res, experiment == "datasets"), c("dataset", "n", "contend
 q$data <- ifelse(q$dataset == "penguins", q$dataset, paste0(q$dataset, " (", format(q$n, big.mark = ",", trim = TRUE), ")"))
 q$data <- factor(q$data, levels = unique(q$data[order(q$dataset, q$n)]))
 
+spread_q <- max(tapply(q$trustworthiness, q$data, function(t) diff(range(t))))
+
 ggplot(q, aes(trustworthiness, contender, colour = contender)) +
   geom_errorbarh(aes(xmin = trustworthiness - trust_sd, xmax = trustworthiness + trust_sd), height = 0, linewidth = 0.5) +
   geom_point(size = 2.2) +
-  facet_wrap(vars(data), scales = "free_x", ncol = 3) +
+  # One shared x axis: the differences between contenders are tiny, and
+  # per-panel axes would make them look large. Contenders that were not run
+  # on a dataset are left out of its panel.
+  facet_wrap(vars(data), scales = "free_y", ncol = 3) +
+  scale_x_continuous(breaks = scales::breaks_width(0.01)) +
   scale_colour_manual(values = palette, guide = "none") +
   labs(
     title = "Trustworthiness (k = 15)",
-    subtitle = "Mean over repetitions, with one standard deviation. Higher is better.",
+    subtitle = sprintf(
+      "Mean over repetitions, with one standard deviation. Higher is better.\nOn every dataset, all contenders lie within %.3f of each other.",
+      spread_q
+    ),
     x = NULL, y = NULL
   ) +
-  theme_bench +
-  theme(axis.text.x = element_text(size = 7))
+  theme_bench
 ```
 
 ```{r quality-table}
@@ -142,10 +182,67 @@ knitr::kable(qt, row.names = FALSE, digits = 3, col.names = c("Data", "Contender
 
 ## MNIST embeddings
 
-```{r mnist, eval = file.exists("benchmark-mnist-embeddings.csv"), fig.height = 6}
+A UMAP layout is only defined up to rotation and reflection, so different
+implementations, and even different runs of one implementation, put the same
+clusters in different places. Spectral initialisation, for example, can
+return each eigenvector with either sign. To compare the layouts below, each
+panel is rotated, and mirrored where needed, so that its digit centres match
+those of its counterpart as closely as possible: umap-learn 0.5 for the
+classic pipeline, umap-learn 0.6 for ggumap's modern one. The table gives the
+similarity to that counterpart: 1 means the same arrangement of digit centres
+after rotation, reflection and scaling. The classic pipeline's spectral
+initialisation fixes the global arrangement, so its layouts agree closely;
+the modern pipeline's layouts vary more from run to run, also within one
+implementation, so values well below 1 are expected there.
+
+```{r mnist-align, eval = file.exists("benchmark-mnist-embeddings.csv")}
 emb <- read.csv("benchmark-mnist-embeddings.csv")
 emb$contender <- factor(emb$contender, levels = contenders)
 emb <- emb[!is.na(emb$contender), ]
+# Each contender is compared with its counterpart (same pipeline).
+counterpart <- c(
+  `ggumap-0.5` = "umap-learn-0.5",
+  `ggumap-0.6` = "umap-learn-0.6",
+  uwot = "umap-learn-0.5",
+  `umap-naive` = "umap-learn-0.5",
+  `umap-learn-0.5` = "umap-learn-0.5",
+  `umap-learn-0.6` = "umap-learn-0.6"
+)
+digit_centres <- function(d) {
+  m <- as.matrix(stats::aggregate(cbind(x, y) ~ label, data = d, FUN = mean)[, -1])
+  m <- sweep(m, 2, colMeans(m))
+  m / sqrt(sum(m^2))
+}
+centres_by <- lapply(split(emb, emb$contender, drop = TRUE), digit_centres)
+# Orthogonal Procrustes: the rotation (or reflection) that best maps a
+# layout's digit centres onto its counterpart's; similarity is the squared sum
+# of the singular values (1 = identical arrangement).
+aligned <- lapply(split(emb, emb$contender, drop = TRUE), function(d) {
+  k <- as.character(d$contender[1])
+  s <- svd(crossprod(centres_by[[k]], centres_by[[counterpart[[k]]]]))
+  rot <- s$u %*% t(s$v)
+  xy <- sweep(as.matrix(d[c("x", "y")]), 2, colMeans(as.matrix(d[c("x", "y")]))) %*% rot
+  d$x <- xy[, 1]
+  d$y <- xy[, 2]
+  attr(d, "similarity") <- sum(s$d)^2
+  attr(d, "mirrored") <- det(rot) < 0
+  d
+})
+similarity <- data.frame(
+  contender = names(aligned),
+  counterpart = counterpart[names(aligned)],
+  similarity = vapply(aligned, attr, numeric(1), "similarity"),
+  mirrored = ifelse(vapply(aligned, attr, logical(1), "mirrored"), "yes", "no")
+)
+similarity <- similarity[similarity$contender != similarity$counterpart, ]
+emb <- do.call(rbind, aligned)
+knitr::kable(
+  similarity, row.names = FALSE, digits = 3,
+  col.names = c("Contender", "Compared with", "Layout similarity", "Mirrored")
+)
+```
+
+```{r mnist, eval = file.exists("benchmark-mnist-embeddings.csv"), fig.height = 6}
 # Digits are labelled directly at their median position (10 classes exceed
 # the 8 categorical colours, so colour would not identify them reliably).
 centres <- stats::aggregate(cbind(x, y) ~ contender + label, data = emb, FUN = stats::median)
@@ -154,7 +251,11 @@ ggplot(emb, aes(x, y)) +
   geom_point(size = 0.05, alpha = 0.25, colour = "grey35") +
   geom_label(data = centres, aes(label = label), size = 3, label.size = 0, fill = "white", alpha = 0.85) +
   facet_wrap(vars(contender), scales = "free", ncol = 3) +
-  labs(title = "MNIST (70,000 digits), 10,000 points shown", x = NULL, y = NULL) +
+  labs(
+    title = "MNIST (70,000 digits), 10,000 points shown",
+    subtitle = "Each layout rotated (and mirrored where needed) to best match its counterpart (see the table).",
+    x = NULL, y = NULL
+  ) +
   theme_bench +
   ggumap::theme_umap()
 ```

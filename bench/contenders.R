@@ -79,9 +79,13 @@ contenders <- list(
     },
     run = function(x, threads, seed) {
       umap <- reticulate::import("umap")
+      # umap-learn 0.6 still defaults to the 0.5 pipeline; the modern one
+      # (recursive init + Adam, what ggumap's flavour = "0.6" ports) needs
+      # compatibility_layout = False.
       model <- umap$UMAP(
         n_neighbors = 15L,
         min_dist = 0.1,
+        compatibility_layout = FALSE,
         n_jobs = as.integer(threads)
       )
       model$fit_transform(x)
