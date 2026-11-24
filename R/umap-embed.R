@@ -98,7 +98,9 @@ umap_embed <- function(
       cli::cli_abort("{.arg data} must be a numeric matrix.")
     }
     x <- data
-    storage.mode(x) <- "double"
+    if (!is.double(x)) {
+      storage.mode(x) <- "double"
+    }
   } else if (is.data.frame(data)) {
     x <- select_features(data, enquo(features))
   } else {
@@ -113,8 +115,9 @@ umap_embed <- function(
       "{sum(!complete)} row{?s} with missing feature values {?was/were} not embedded."
     )
   }
+  # Subsetting copies the data, so only subset when rows are missing.
   res <- umap_compute(
-    x[complete, , drop = FALSE],
+    if (all(complete)) x else x[complete, , drop = FALSE],
     args,
     seed = resolve_seed(seed)
   )

@@ -215,10 +215,39 @@ fn panic_message(payload: &(dyn std::any::Any + Send)) -> String {
 }
 
 /// Row-major `Array2<f32>` from R's column-major double matrix.
-fn to_array(x: &RMatrix<f64>) -> Array2<f32> {
-    let n = x.nrows();
-    let values = x.data();
-    Array2::from_shape_fn((n, x.ncols()), |(i, j)| values[j * n + i] as f32)
+fn to_array(x: &RMatrix<f64>, scale: bool) -> Array2<f32> {
+    to_f32(x.data(), x.nrows(), x.ncols(), scale)
+}
+
+/// Row-major `Array2<f32>` from `n` x `p` column-major doubles. With `scale`,
+/// each column is standardised to zero mean and unit variance on the way, in
+/// double precision and with the same operations as R's
+/// `sweep(sweep(x, 2, centre), 2, sd, "/")`, so that no scaled copy of the
+/// data is needed in R. Constant columns become 0.
+fn to_f32(values: &[f64], n: usize, p: usize, scale: bool) -> Array2<f32> {
+    let mut out = Array2::<f32>::zeros((n, p));
+    for j in 0..p {
+        let col = &values[j * n..(j + 1) * n];
+        let (centre, sd) = if scale {
+            column_moments(col)
+        } else {
+            (0.0, 1.0)
+        };
+        for (i, &v) in col.iter().enumerate() {
+            out[[i, j]] = ((v - centre) / sd) as f32;
+        }
+    }
+    out
+}
+
+/// Mean and standard deviation (denominator n - 1) of a column; a standard
+/// deviation of 0 is returned as 1, so that constant columns become 0.
+fn column_moments(col: &[f64]) -> (f64, f64) {
+    let n = col.len().max(1) as f64;
+    let mean = col.iter().sum::<f64>() / n;
+    let ss: f64 = col.iter().map(|v| (v - mean) * (v - mean)).sum();
+    let sd = (ss / (n - 1.0).max(1.0)).sqrt();
+    (mean, if sd == 0.0 { 1.0 } else { sd })
 }
 
 fn to_real_matrix(a: &Array2<f32>) -> RMatrix<f64> {
@@ -243,13 +272,14 @@ fn to_index_matrix(a: &Array2<i32>) -> RMatrix<i32> {
 /// @param x Numeric matrix, observations in rows. Must be finite.
 /// @param params Named list of parameters (see `umap_params()` in R).
 /// @param progress `NULL` or a function `(fraction, stage)` called on the main thread.
+/// @param scale Standardise each column (in Rust, without a copy in R)?
 /// @return A list with `embedding`, `knn_indices` (1-based) and `knn_distances`;
 ///   or a string starting with `"interrupt"` / `"error: "`.
 /// @noRd
 #[extendr]
-fn umap_rs(x: RMatrix<f64>, params: List, progress: Robj) -> Result<Robj> {
+fn umap_rs(x: RMatrix<f64>, params: List, progress: Robj, scale: bool) -> Result<Robj> {
     let p = parse_params(&params)?;
-    let data = to_array(&x);
+    let data = to_array(&x, scale);
     let progress_fn = progress.as_function();
 
     let (tx, rx) = mpsc::channel::<Msg>();
@@ -365,6 +395,38 @@ mod tests {
         Array2::from_shape_fn((n, 5), |(i, j)| {
             ((i % 3) * 10 + (i * 7 + j * 13) % 5) as f32
         })
+    }
+
+    #[test]
+    fn to_f32_converts_column_major_to_row_major() {
+        // 2 x 3, column-major: columns (1, 2), (3, 4), (5, 6).
+        let a = to_f32(&[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 2, 3, false);
+        assert_eq!(a.dim(), (2, 3));
+        assert_eq!(a.row(0).to_vec(), vec![1.0, 3.0, 5.0]);
+        assert_eq!(a.row(1).to_vec(), vec![2.0, 4.0, 6.0]);
+    }
+
+    #[test]
+    fn to_f32_standardises_columns() {
+        // Columns (1, 2, 3) and (10, 20, 60).
+        let a = to_f32(&[1.0, 2.0, 3.0, 10.0, 20.0, 60.0], 3, 2, true);
+        for j in 0..2 {
+            let col: Vec<f64> = a.column(j).iter().map(|&v| v as f64).collect();
+            let mean = col.iter().sum::<f64>() / 3.0;
+            let var = col.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / 2.0;
+            assert!(mean.abs() < 1e-6, "column {j} mean {mean}");
+            assert!((var - 1.0).abs() < 1e-6, "column {j} variance {var}");
+        }
+        assert_eq!(a.column(0).to_vec(), vec![-1.0, 0.0, 1.0]);
+    }
+
+    #[test]
+    fn to_f32_turns_constant_columns_into_zeros() {
+        let a = to_f32(&[1.0, 2.0, 3.0, 5.0, 5.0, 5.0], 3, 2, true);
+        assert_eq!(a.column(1).to_vec(), vec![0.0, 0.0, 0.0]);
+        // A single row: every column is constant.
+        let b = to_f32(&[7.0, 8.0], 1, 2, true);
+        assert_eq!(b.row(0).to_vec(), vec![0.0, 0.0]);
     }
 
     #[test]

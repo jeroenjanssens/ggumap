@@ -36,35 +36,25 @@ select_features <- function(data, features, call = caller_env()) {
       call = call
     )
   }
-  mat <- matrix(
-    as.double(unlist(cols, use.names = FALSE)),
-    nrow = nrow(data),
-    ncol = length(cols),
-    dimnames = list(NULL, names(cols))
-  )
+  # One allocation: unlist() creates the values, dim() reuses them.
+  mat <- unlist(cols, use.names = FALSE)
+  if (!is.double(mat)) {
+    mat <- as.double(mat)
+  }
+  dim(mat) <- c(nrow(data), length(cols))
+  colnames(mat) <- names(cols)
   mat
-}
-
-# Standardise columns; constant columns become zero instead of NaN.
-scale_features <- function(x) {
-  centre <- colMeans(x)
-  x <- sweep(x, 2, centre)
-  sds <- sqrt(colSums(x^2) / max(nrow(x) - 1, 1))
-  sds[sds == 0] <- 1
-  sweep(x, 2, sds, "/")
 }
 
 # Run UMAP on a complete, finite double matrix. Returns a list with
 # `embedding` (n x n_components) and `knn_dist` (mean distance to the
 # neighbours in input space), or NULL when there are too few rows.
+#
+# The data are never copied here: min() and max() check the values without
+# temporary matrices, and `scale = TRUE` standardises the columns in Rust while
+# converting them to single precision.
 umap_compute <- function(x, args, seed, call = caller_env()) {
   n <- nrow(x)
-  if (any(is.infinite(x))) {
-    cli::cli_abort(
-      "Feature values must be finite; found {.val {Inf}}.",
-      call = call
-    )
-  }
   if (n < umap_min_rows) {
     cli::cli_warn(
       "UMAP needs at least {umap_min_rows} complete observations, not {n}.",
@@ -72,10 +62,16 @@ umap_compute <- function(x, args, seed, call = caller_env()) {
     )
     return(NULL)
   }
-  if (args$scale) {
-    x <- scale_features(x)
+  lo <- min(x)
+  hi <- max(x)
+  if (is.infinite(lo) || is.infinite(hi)) {
+    cli::cli_abort(
+      "Feature values must be finite; found {.val {Inf}}.",
+      call = call
+    )
   }
-  if (max(abs(x)) > float_limit) {
+  # Standardised values are at most sqrt(n - 1) in magnitude.
+  if (!args$scale && max(-lo, hi) > float_limit) {
     cli::cli_abort(
       c(
         "Feature values are too large for single-precision floating point.",
@@ -109,12 +105,18 @@ umap_compute <- function(x, args, seed, call = caller_env()) {
   }
   params <- rust_params(args, seed = seed, n_neighbors = n_neighbors)
 
-  key <- hash(list(x, params))
+  key <- hash(list(x, params, args$scale))
   cached <- cache_get(key)
   if (!is.null(cached)) {
     return(cached)
   }
-  res <- run_umap(x, params, progress = args$control$progress, call = call)
+  res <- run_umap(
+    x,
+    params,
+    scale = args$scale,
+    progress = args$control$progress,
+    call = call
+  )
   out <- list(
     embedding = res$embedding,
     knn_dist = mean_knn_dist(res$knn_indices, res$knn_distances)
@@ -133,9 +135,17 @@ mean_knn_dist <- function(idx, dist) {
 }
 
 # Call into Rust, translating interrupts and errors into R conditions.
-run_umap <- function(x, params, progress = TRUE, call = caller_env()) {
-  storage.mode(x) <- "double"
-  dimnames(x) <- NULL
+run_umap <- function(
+  x,
+  params,
+  scale = FALSE,
+  progress = TRUE,
+  call = caller_env()
+) {
+  # Only convert when needed: modifying a shared matrix copies it.
+  if (!is.double(x)) {
+    storage.mode(x) <- "double"
+  }
   callback <- NULL
   if (progress) {
     stage <- ""
@@ -152,7 +162,7 @@ run_umap <- function(x, params, progress = TRUE, call = caller_env()) {
     }
   }
   counter$calls <- counter$calls + 1L
-  res <- umap_rs(x, params, callback)
+  res <- umap_rs(x, params, callback, scale)
   if (progress) {
     cli::cli_progress_done(id = id)
   }

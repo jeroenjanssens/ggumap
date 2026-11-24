@@ -472,7 +472,9 @@ StatUmap <- ggplot2::ggproto(
     feature_cols <- grepl("^\\.umap_f[0-9]+$", names(data))
     x <- as.matrix(data[feature_cols])
     data <- data[!feature_cols]
-    storage.mode(x) <- "double"
+    if (!is.double(x)) {
+      storage.mode(x) <- "double"
+    }
 
     complete <- stats::complete.cases(x)
     if (!all(complete)) {

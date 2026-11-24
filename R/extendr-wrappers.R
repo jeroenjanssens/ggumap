@@ -10,10 +10,11 @@ NULL
 #' @param x Numeric matrix, observations in rows. Must be finite.
 #' @param params Named list of parameters (see `umap_params()` in R).
 #' @param progress `NULL` or a function `(fraction, stage)` called on the main thread.
+#' @param scale Standardise each column (in Rust, without a copy in R)?
 #' @return A list with `embedding`, `knn_indices` (1-based) and `knn_distances`;
 #'   or a string starting with `"interrupt"` / `"error: "`.
 #' @noRd
-umap_rs <- function(x, params, progress) .Call(wrap__umap_rs, x, params, progress)
+umap_rs <- function(x, params, progress, scale) .Call(wrap__umap_rs, x, params, progress, scale)
 
 #' Version information of the bundled Rust crates (internal).
 #' @noRd

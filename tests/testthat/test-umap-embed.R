@@ -95,11 +95,30 @@ test_that("scale = TRUE standardises features", {
   expect_gt(knn_accuracy(scaled, df$label), knn_accuracy(unscaled, df$label))
 })
 
-test_that("scale_features() handles constant columns", {
-  x <- cbind(a = c(1, 2, 3), b = c(5, 5, 5))
-  s <- scale_features(x)
-  expect_equal(s[, "b"], c(0, 0, 0))
-  expect_equal(unname(s[, "a"]), c(-1, 0, 1))
+test_that("scale = TRUE equals embedding standardised data", {
+  x <- as.matrix(blobs(k = 3, p = 4)[1:4])
+  x[, 2] <- x[, 2] * 1000 + 50
+  standardised <- sweep(x, 2, colMeans(x))
+  standardised <- sweep(standardised, 2, apply(x, 2, stats::sd), "/")
+  expect_equal(
+    umap_embed(x, scale = TRUE, seed = 1, n_threads = 1),
+    umap_embed(standardised, seed = 1, n_threads = 1),
+    tolerance = 1e-6
+  )
+})
+
+test_that("constant columns are ignored with scale = TRUE", {
+  x <- as.matrix(blobs(k = 3, p = 4)[1:4])
+  expect_equal(
+    umap_embed(cbind(x, constant = 5), scale = TRUE, seed = 1, n_threads = 1),
+    umap_embed(x, scale = TRUE, seed = 1, n_threads = 1)
+  )
+})
+
+test_that("scale = TRUE accepts values too large for unscaled embedding", {
+  x <- as.matrix(blobs(k = 2, p = 3)[1:3]) * 1e20
+  emb <- umap_embed(x, scale = TRUE, seed = 1, n_threads = 1)
+  expect_true(all(is.finite(emb$UMAP1)))
 })
 
 test_that("larger min_dist spreads points out", {

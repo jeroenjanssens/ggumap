@@ -19,10 +19,15 @@ test_that("progress callbacks are called on the main thread", {
   )
   stages <- character()
   fractions <- numeric()
-  res <- umap_rs(as.matrix(df[1:8]), params, function(fraction, stage) {
-    stages <<- c(stages, stage)
-    fractions <<- c(fractions, fraction)
-  })
+  res <- umap_rs(
+    as.matrix(df[1:8]),
+    params,
+    function(fraction, stage) {
+      stages <<- c(stages, stage)
+      fractions <<- c(fractions, fraction)
+    },
+    FALSE
+  )
   expect_type(res, "list")
   expect_true("Optimizing layout" %in% stages)
   expect_true(all(fractions >= 0 & fractions <= 1))
@@ -50,11 +55,11 @@ test_that("errors in the progress callback stop the computation", {
   # R_tryEval prints the callback's error before returning it; keep it out
   # of the test output.
   expect_error(utils::capture.output(
-    umap_rs(as.matrix(df[1:8]), params, function(...) stop("boom")),
+    umap_rs(as.matrix(df[1:8]), params, function(...) stop("boom"), FALSE),
     type = "message"
   ))
   # The worker thread was stopped and joined: new computations still work.
-  expect_type(umap_rs(as.matrix(df[1:8]), params, NULL), "list")
+  expect_type(umap_rs(as.matrix(df[1:8]), params, NULL, FALSE), "list")
 })
 
 test_that("a progress bar does not break the computation", {
@@ -95,7 +100,7 @@ test_that("Rust errors are reported as R errors", {
   )
   params$metric <- "euclidean"
   params$init <- "nope"
-  expect_error(umap_rs(as.matrix(df[1:8]), params, NULL), "unknown init")
+  expect_error(umap_rs(as.matrix(df[1:8]), params, NULL, FALSE), "unknown init")
 })
 
 test_that("mean_knn_dist() excludes the point itself", {
