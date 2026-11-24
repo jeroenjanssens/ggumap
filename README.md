@@ -76,12 +76,12 @@ plot:
 penguins <- na.omit(palmerpenguins::penguins)
 umap_embed(penguins, bill_length_mm:body_mass_g, scale = TRUE, seed = 1) |> head()
 #>       UMAP1    UMAP2  knn_dist
-#> 1 10.573380 4.556105 0.4842742
-#> 2  9.940044 5.322702 0.4916678
-#> 3  9.473128 5.615625 0.5714622
-#> 4  9.850804 3.574307 0.5629448
-#> 5 10.979073 2.605547 0.6880632
-#> 6 10.053648 5.051975 0.4997849
+#> 1  8.797668 2.989627 0.4842742
+#> 2  7.851410 3.140680 0.4916678
+#> 3  7.228579 2.900652 0.5714622
+#> 4  8.996132 1.971760 0.5629448
+#> 5 10.241680 1.819770 0.6880632
+#> 6  8.133076 2.987497 0.4997849
 ```
 
 See `vignette("ggumap")` for more.
@@ -96,10 +96,10 @@ ggumap is much faster than the
 
 | Implementation    | Seconds | Trustworthiness |
 |:------------------|--------:|----------------:|
-| ggumap, 8 threads |     1.3 |           0.956 |
+| ggumap, 8 threads |     1.2 |           0.956 |
 | uwot, 8 threads   |     1.4 |           0.955 |
 | uwot, 1 thread    |     5.3 |           0.956 |
-| ggumap, 1 thread  |     5.8 |           0.956 |
+| ggumap, 1 thread  |     5.6 |           0.956 |
 | umap (pure R)     |    54.1 |           0.956 |
 
 20,000 observations, median of 3 runs.

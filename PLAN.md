@@ -164,3 +164,8 @@ Status legend: [x] done, [ ] to do, [~] needs Jeroen.
   Performance section). The README's claims still hold. The package
   tarball gains README-benchmark.png (74 KB) and the README section; the
   win-builder uploads predate this but the package code is unchanged.
+* 2026-11-24: memory fixes (48e358e): R no longer copies the data (553 ->
+  15 MB of R allocations for a 120 MB matrix; scale = TRUE now done in
+  Rust). ggumap re-measured in both suites (on battery, as agreed): MNIST
+  70k extra memory 2.3 GB -> 0.7-0.8 GB, peak 3.1 GB -> 1.3-1.4 GB (now
+  the lowest of all contenders); times and quality unchanged.
