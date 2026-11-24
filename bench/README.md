@@ -8,7 +8,7 @@ memory and embedding quality. Not part of the package build.
 | `ggumap-0.5`    | this package, `flavour = "0.5"` (spectral init + SGD)               |
 | `ggumap-0.6`    | this package, `flavour = "0.6"` (recursive init + Adam)             |
 | `uwot`          | `uwot::umap()` (C++, Annoy nearest neighbours)                      |
-| `umap-naive`    | `umap::umap(method = "naive")`, pure R (what ggpca uses); n ≤ 10k   |
+| `umap-naive`    | `umap::umap(method = "naive")`, pure R (what ggpca uses); n ≤ 20k   |
 | `umap-learn-0.5`| Python umap-learn 0.5.x via reticulate (environment managed by uv)  |
 | `umap-learn-0.6`| Python umap-learn 0.6.x via reticulate (environment managed by uv)  |
 
@@ -22,13 +22,18 @@ All contenders use `n_neighbors = 15`, `min_dist = 0.1`, Euclidean distance,
 Rscript bench/run.R --suite=quick      # a few minutes
 Rscript bench/run.R --suite=full       # about an hour; downloads MNIST once
 Rscript bench/run.R --suite=full --contenders=ggumap-0.5,uwot --reps=5
+
+# The README figure: ggumap vs umap (and uwot), 1 and 8 threads
+just bench-readme
 ```
 
 Every measurement runs in a fresh R process (`callr`), so caches, JIT
 compilation and thread pools do not leak between runs. Each process first does
 an untimed warm-up on up to 5000 rows (umap-learn JIT-compiles its nearest
-neighbour code only above 4096 rows), then times one embedding. The parent process polls the child's
-resident memory every 20 ms to record the peak.
+neighbour code only above 4096 rows), with a different seed, and then times one
+embedding. ggumap's result cache is disabled, so a timed run is never a cache
+hit. The parent process polls the child's resident memory every 20 ms to record
+the peak.
 
 Quality is measured on a fixed random subsample of at most 5000 points:
 

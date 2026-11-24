@@ -57,3 +57,10 @@ update-upstream sha="":
 # Run the benchmarks (suite: quick or full)
 bench suite="quick":
     Rscript bench/run.R --suite={{ suite }}
+
+# Benchmark ggumap against umap and uwot, and redraw the README figure
+bench-readme:
+    rm -f bench/results/readme.csv
+    Rscript bench/run.R --suite=readme --out=bench/results/readme.csv
+    Rscript bench/readme-figure.R
+    Rscript -e 'rmarkdown::render("README.Rmd", output_format = rmarkdown::github_document(html_preview = FALSE), quiet = TRUE)'

@@ -19,11 +19,17 @@ parse_args <- function(args) {
 }
 opts <- parse_args(commandArgs(trailingOnly = TRUE))
 suite <- opts$suite %||% "quick"
-threads <- as.integer(opts$threads %||% if (suite == "full") 8L else 4L)
-reps <- as.integer(opts$reps %||% if (suite == "full") 3L else 1L)
+threads <- as.integer(opts$threads %||% if (suite == "quick") 4L else 8L)
+reps <- as.integer(opts$reps %||% if (suite == "quick") 1L else 3L)
 out_file <- opts$out %||% file.path("bench", "results", "results.csv")
-use <- if (is.null(opts$contenders)) {
+# The README suite compares ggumap with the umap package (uwot for reference).
+default_contenders <- if (suite == "readme") {
+  c("ggumap-0.5", "uwot", "umap-naive")
+} else {
   names(contenders)
+}
+use <- if (is.null(opts$contenders)) {
+  default_contenders
 } else {
   strsplit(opts$contenders, ",")[[1]]
 }
@@ -58,6 +64,10 @@ datasets <- switch(
       )
     )
   ),
+  # ggumap vs the umap package (and uwot for reference), for the README.
+  readme = lapply(c(1000, 2500, 5000, 10000, 20000), function(n) {
+    list(name = "blobs", n = n, load = function() bench_blobs(n))
+  }),
   stop("unknown suite: ", suite)
 )
 
@@ -82,13 +92,15 @@ child <- function(contender, data_file, threads, seed, emb_file) {
   spec <- contenders[[contender]]
   spec$setup()
   x <- readRDS(data_file)$x
+  # Never time a cache hit: ggumap caches results in memory.
+  options(ggumap.cache_size = 0L)
   # Untimed warm-up: loads libraries, starts thread pools and JIT-compiles
   # numba code. umap-learn only uses (and compiles) PyNNDescent above 4096
-  # rows, so warm up on up to 5000 rows.
+  # rows, so warm up on up to 5000 rows, with another seed than the timed run.
   invisible(spec$run(
     x[seq_len(min(5000, nrow(x))), , drop = FALSE],
     threads,
-    seed
+    seed + 1000L
   ))
   gc()
   baseline <- ps::ps_memory_info()[["rss"]]
@@ -197,7 +209,12 @@ run_dataset <- function(ds, contenders_to_run, thread_counts, experiment) {
     if (n > contenders[[contender]]$max_n) {
       next
     }
-    for (th in thread_counts) {
+    ths <- if (isTRUE(contenders[[contender]]$single_threaded)) {
+      1L
+    } else {
+      thread_counts
+    }
+    for (th in ths) {
       for (rep in seq_len(reps)) {
         message(sprintf(
           "%-10s %-16s threads=%d rep=%d",
@@ -260,9 +277,16 @@ run_dataset <- function(ds, contenders_to_run, thread_counts, experiment) {
   do.call(rbind, rows)
 }
 
+# The README suite times every multi-threaded contender with 1 thread too.
+dataset_threads <- if (suite == "readme") unique(c(1L, threads)) else threads
 results <- list()
 for (ds in datasets) {
-  results[[length(results) + 1]] <- run_dataset(ds, use, threads, "datasets")
+  results[[length(results) + 1]] <- run_dataset(
+    ds,
+    use,
+    dataset_threads,
+    "datasets"
+  )
 }
 if (!is.null(scaling)) {
   results[[length(results) + 1]] <- run_dataset(
@@ -278,7 +302,7 @@ message("Wrote ", nrow(results), " rows to ", out_file)
 
 # Copy the latest results for the benchmark article.
 article_dir <- file.path("vignettes", "articles")
-if (dir.exists(article_dir)) {
+if (suite == "full" && dir.exists(article_dir)) {
   file.copy(
     out_file,
     file.path(article_dir, "benchmark-results.csv"),

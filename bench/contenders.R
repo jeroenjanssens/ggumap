@@ -43,7 +43,9 @@ contenders <- list(
     }
   ),
   `umap-naive` = list(
-    max_n = 10000,
+    max_n = 20000,
+    # Pure R, so the thread count does not apply.
+    single_threaded = TRUE,
     setup = function() library(umap),
     run = function(x, threads, seed) {
       cfg <- umap::umap.defaults
