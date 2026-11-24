@@ -77,7 +77,8 @@ ggplot(cars, aes(label = model, colour = factor(cyl))) +
 `umap_embed()` gives you the embedding as a data frame, outside of a plot:
 
 ```{r embed}
-umap_embed(iris, Sepal.Length:Petal.Width, seed = 1) |> head()
+penguins <- na.omit(palmerpenguins::penguins)
+umap_embed(penguins, bill_length_mm:body_mass_g, scale = TRUE, seed = 1) |> head()
 ```
 
 See `vignette("ggumap")` for more.

@@ -9,12 +9,6 @@ bench_blobs <- function(n, p = 50, k = 10, seed = 1) {
   list(x = x, labels = labels)
 }
 
-bench_iris <- function() {
-  x <- unique(as.matrix(iris[1:4]))
-  labels <- iris$Species[!duplicated(as.matrix(iris[1:4]))]
-  list(x = x, labels = as.integer(labels))
-}
-
 bench_penguins <- function() {
   df <- stats::na.omit(palmerpenguins::penguins)
   x <- scale(as.matrix(df[c(

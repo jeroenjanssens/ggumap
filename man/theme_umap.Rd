@@ -19,9 +19,11 @@ Add it to a plot like any other theme modification, after a complete theme
 such as \code{\link[ggplot2:theme_minimal]{ggplot2::theme_minimal()}} if you use one.
 }
 \examples{
+\dontshow{if (rlang::is_installed("palmerpenguins")) withAutoprint(\{ # examplesIf}
 library(ggplot2)
 
-ggplot(iris, aes(colour = Species)) +
-  geom_umap() +
+ggplot(na.omit(palmerpenguins::penguins), aes(colour = species)) +
+  geom_umap(scale = TRUE) +
   theme_umap()
+\dontshow{\}) # examplesIf}
 }

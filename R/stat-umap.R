@@ -54,16 +54,23 @@
 #'
 #' @return A ggplot2 layer.
 #' @export
-#' @examples
+#' @examplesIf rlang::is_installed("palmerpenguins")
 #' library(ggplot2)
+#' penguins <- na.omit(palmerpenguins::penguins)
 #'
-#' # All numeric columns are features by default
-#' ggplot(iris, aes(colour = Species)) +
-#'   geom_umap()
+#' # All numeric columns are features by default; standardise them, since
+#' # they are measured in different units
+#' ggplot(penguins, aes(colour = species)) +
+#'   geom_umap(scale = TRUE)
 #'
 #' # Select features explicitly, tune UMAP and remove the meaningless axes
-#' ggplot(iris, aes(colour = Species)) +
-#'   geom_umap(features = starts_with("Petal"), n_neighbors = 30, min_dist = 0.5) +
+#' ggplot(penguins, aes(colour = species)) +
+#'   geom_umap(
+#'     features = bill_length_mm:body_mass_g,
+#'     scale = TRUE,
+#'     n_neighbors = 30,
+#'     min_dist = 0.5
+#'   ) +
 #'   theme_umap()
 #'
 #' # Several layers share one embedding
@@ -72,20 +79,20 @@
 #'   stat_umap(geom = "text", scale = TRUE, n_neighbors = 5, vjust = -0.6, size = 3)
 #'
 #' # Colour by computed variables
-#' ggplot(iris) +
-#'   geom_umap(aes(colour = after_stat(knn_dist)))
+#' ggplot(penguins) +
+#'   geom_umap(aes(colour = after_stat(knn_dist)), scale = TRUE)
 #'
 #' # One embedding, faceted
-#' ggplot(iris, aes(colour = Species)) +
-#'   geom_umap() +
-#'   facet_wrap(vars(Species))
+#' ggplot(penguins, aes(colour = species)) +
+#'   geom_umap(scale = TRUE) +
+#'   facet_wrap(vars(species))
 #'
 #' # Geoms with their own statistic (densities, binning) need umap_embed()
-#' emb <- umap_embed(iris, seed = 1)
+#' emb <- umap_embed(penguins, scale = TRUE, seed = 1)
 #' ggplot(emb, aes(UMAP1, UMAP2)) +
 #'   geom_bin_2d(bins = 20)
 #'
-#' @examplesIf rlang::is_installed("MASS")
+#' @examplesIf rlang::is_installed(c("palmerpenguins", "MASS"))
 #' ggplot(emb, aes(UMAP1, UMAP2)) +
 #'   geom_density_2d_filled(contour_var = "ndensity")
 stat_umap <- function(

@@ -80,9 +80,19 @@ Uniform Manifold Approximation and Projection (UMAP). This is the engine
 behind \code{\link[=stat_umap]{stat_umap()}}, made available for use outside of plots.
 }
 \examples{
-emb <- umap_embed(iris, Sepal.Length:Petal.Width, seed = 1, n_threads = 1)
+\dontshow{if (rlang::is_installed("palmerpenguins")) withAutoprint(\{ # examplesIf}
+penguins <- na.omit(palmerpenguins::penguins)
+emb <- umap_embed(
+  penguins,
+  bill_length_mm:body_mass_g,
+  scale = TRUE,
+  seed = 1,
+  n_threads = 1
+)
 head(emb)
 
 # Matrices work too
-emb <- umap_embed(as.matrix(iris[1:4]), seed = 1, n_threads = 1)
+x <- as.matrix(penguins[c("bill_length_mm", "bill_depth_mm")])
+emb <- umap_embed(x, scale = TRUE, seed = 1, n_threads = 1)
+\dontshow{\}) # examplesIf}
 }

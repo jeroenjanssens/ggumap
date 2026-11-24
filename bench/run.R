@@ -40,7 +40,6 @@ stopifnot(all(use %in% names(contenders)))
 datasets <- switch(
   suite,
   quick = list(
-    list(name = "iris", load = bench_iris),
     list(name = "penguins", load = bench_penguins),
     list(name = "blobs", n = 1000, load = function() bench_blobs(1000)),
     list(name = "blobs", n = 5000, load = function() bench_blobs(5000)),
@@ -48,7 +47,6 @@ datasets <- switch(
   ),
   full = c(
     list(
-      list(name = "iris", load = bench_iris),
       list(name = "penguins", load = bench_penguins)
     ),
     lapply(c(1000, 5000, 10000, 25000, 50000, 100000), function(n) {

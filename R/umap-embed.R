@@ -40,12 +40,20 @@
 #'   the observation to its nearest neighbours in input space). Rows with
 #'   missing feature values are `NA`.
 #' @export
-#' @examples
-#' emb <- umap_embed(iris, Sepal.Length:Petal.Width, seed = 1, n_threads = 1)
+#' @examplesIf rlang::is_installed("palmerpenguins")
+#' penguins <- na.omit(palmerpenguins::penguins)
+#' emb <- umap_embed(
+#'   penguins,
+#'   bill_length_mm:body_mass_g,
+#'   scale = TRUE,
+#'   seed = 1,
+#'   n_threads = 1
+#' )
 #' head(emb)
 #'
 #' # Matrices work too
-#' emb <- umap_embed(as.matrix(iris[1:4]), seed = 1, n_threads = 1)
+#' x <- as.matrix(penguins[c("bill_length_mm", "bill_depth_mm")])
+#' emb <- umap_embed(x, scale = TRUE, seed = 1, n_threads = 1)
 umap_embed <- function(
   data,
   features = where(is.numeric),

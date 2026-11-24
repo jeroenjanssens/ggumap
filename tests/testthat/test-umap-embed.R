@@ -76,9 +76,11 @@ test_that("both flavours give faithful embeddings", {
   }
 })
 
-test_that("iris quality is comparable to uwot", {
+test_that("quality on real data is comparable to uwot", {
   skip_if_not_installed("uwot")
-  x <- unique(as.matrix(iris[1:4]))
+  skip_if_not_installed("palmerpenguins")
+  penguins <- na.omit(palmerpenguins::penguins)
+  x <- unique(scale(as.matrix(penguins[3:6])))
   ours <- as.matrix(umap_embed(x, seed = 1)[1:2])
   theirs <- withr::with_seed(1, uwot::umap(x, n_threads = 1))
   expect_gt(trustworthiness(x, ours), trustworthiness(x, theirs) - 0.03)

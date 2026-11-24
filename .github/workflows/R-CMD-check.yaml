@@ -82,4 +82,4 @@ jobs:
           rustc --version
           R CMD build --no-build-vignettes --no-manual .
           CARGO_NET_OFFLINE=true R CMD INSTALL ggumap_*.tar.gz
-          Rscript -e 'library(ggumap); print(head(umap_embed(iris, seed = 1, n_threads = 1)))'
+          Rscript -e 'library(ggumap); print(head(umap_embed(mtcars, seed = 1, n_threads = 1)))'

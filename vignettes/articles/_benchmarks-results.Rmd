@@ -118,7 +118,7 @@ ports of the same algorithm.
 
 ```{r quality, fig.height = 5}
 q <- summarise(subset(res, experiment == "datasets"), c("dataset", "n", "contender"))
-q$data <- ifelse(q$dataset %in% c("iris", "penguins"), q$dataset, paste0(q$dataset, " (", format(q$n, big.mark = ",", trim = TRUE), ")"))
+q$data <- ifelse(q$dataset == "penguins", q$dataset, paste0(q$dataset, " (", format(q$n, big.mark = ",", trim = TRUE), ")"))
 q$data <- factor(q$data, levels = unique(q$data[order(q$dataset, q$n)]))
 
 ggplot(q, aes(trustworthiness, contender, colour = contender)) +

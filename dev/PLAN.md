@@ -147,7 +147,7 @@ ggplot(penguins, aes(colour = sex)) + geom_umap(scale = TRUE) + facet_wrap(~spec
 ggplot(docs, aes(colour = topic)) + geom_umap(features = starts_with("tfidf_"), metric = "cosine")
 
 # 6. Outside ggplot2
-emb <- umap_embed(iris, Sepal.Length:Petal.Width, seed = 42)
+emb <- umap_embed(penguins, bill_length_mm:body_mass_g, seed = 42)
 ```
 
 ---
@@ -239,7 +239,7 @@ error mapping.
 | `test-cache.R` | second build hits the cache (instrumented counter), cache key changes with data/params, `umap_cache_clear()`, multi-layer plots share layout |
 | `test-params.R` | every metric and every init runs; `flavour` 0.5/0.6; each `optimizer`; `min_dist` larger → larger mean pairwise distance (monotonic sanity) |
 | `test-edge-cases.R` | n = 2, 3, n ≈ n_neighbors, duplicate rows, constant columns, p = 1, very large magnitudes (f32 overflow → error), single-row facet panels |
-| `test-quality.R` | *Correctness, not just "it runs":* on 3–5 well-separated blobs, kNN-classifier accuracy in the embedding ≥ 0.95 and trustworthiness (k = 15) ≥ 0.9; iris trustworthiness close to `uwot` (`skip_if_not_installed("uwot")`) |
+| `test-quality.R` | *Correctness, not just "it runs":* on 3–5 well-separated blobs, kNN-classifier accuracy in the embedding ≥ 0.95 and trustworthiness (k = 15) ≥ 0.9; penguins trustworthiness close to `uwot` (`skip_if_not_installed("uwot")`) |
 | `test-visual.R` | `vdiffr::expect_doppelganger()` for a handful of plots (seeded, 1 thread). `skip_on_cran()` because floating-point output may differ across platforms |
 | `test-interrupt.R` / manual | interrupt and progress behaviour (partly manual, documented) |
 
@@ -270,7 +270,7 @@ default epochs, spectral init where available, and an equal thread count.
 ### 6.2 Datasets
 
 - Synthetic Gaussian blobs: n ∈ {1k, 5k, 10k, 50k, 100k, 250k}, p ∈ {10, 50, 300}, for scaling curves.
-- Real: iris/penguins (tiny), MNIST 70k × 784 and Fashion-MNIST (downloaded once, cached,
+- Real: penguins (tiny), MNIST 70k × 784 and Fashion-MNIST (downloaded once, cached,
   checksummed), and a scRNA-seq PCA matrix (~50 dims; typical bio use case).
 
 ### 6.3 Measurements

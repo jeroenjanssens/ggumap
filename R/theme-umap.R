@@ -8,11 +8,11 @@
 #' @param ... Further theme elements passed on to [ggplot2::theme()].
 #' @return A [ggplot2::theme()] object.
 #' @export
-#' @examples
+#' @examplesIf rlang::is_installed("palmerpenguins")
 #' library(ggplot2)
 #'
-#' ggplot(iris, aes(colour = Species)) +
-#'   geom_umap() +
+#' ggplot(na.omit(palmerpenguins::penguins), aes(colour = species)) +
+#'   geom_umap(scale = TRUE) +
 #'   theme_umap()
 theme_umap <- function(...) {
   ggplot2::theme(
