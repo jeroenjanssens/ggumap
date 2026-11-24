@@ -87,8 +87,10 @@ ggplot(by_metric, aes(UMAP1, UMAP2, colour = group)) +
 
 `flavour = "0.5"` (the default) reproduces the classic umap-learn pipeline:
 a spectral initialisation followed by stochastic gradient descent.
-`flavour = "0.6"` uses umap-learn 0.6's recursive initialisation and the Adam
-optimiser; it is faster and deterministic for a fixed number of threads.
+`flavour = "0.6"` is the modern pipeline added in umap-learn 0.6 (there
+`compatibility_layout = False`): a recursive initialisation and the Adam
+optimiser. It is faster, and deterministic for a fixed number of threads.
+umap-learn 0.6 itself still uses the classic pipeline by default.
 `init` overrides the initialisation of either flavour.
 
 ```{r flavours, fig.height = 5.5}

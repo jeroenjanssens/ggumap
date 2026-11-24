@@ -25,8 +25,11 @@
 #'   `"pca"`, `"random"` or `"recursive"`.
 #' @param flavour Which umap-learn pipeline to reproduce. `"0.5"` (default) is
 #'   the established algorithm: spectral initialisation and stochastic
-#'   gradient descent. `"0.6"` uses recursive initialisation and the Adam
-#'   optimiser, and is deterministic for a fixed number of threads.
+#'   gradient descent. `"0.6"` is the modern pipeline added in umap-learn 0.6
+#'   (`compatibility_layout = False` there): recursive initialisation and the
+#'   Adam optimiser. It is faster, and deterministic for a fixed number of
+#'   threads. Note that umap-learn 0.6 itself still uses the `"0.5"` pipeline
+#'   by default.
 #' @param scale Standardise each feature to zero mean and unit variance
 #'   before embedding? Recommended when features have different units.
 #' @param seed Random seed. `NULL` (default) draws one from R's random number

@@ -54,8 +54,11 @@ determines how clumped the embedding is.}
 
 \item{flavour}{Which umap-learn pipeline to reproduce. \code{"0.5"} (default) is
 the established algorithm: spectral initialisation and stochastic
-gradient descent. \code{"0.6"} uses recursive initialisation and the Adam
-optimiser, and is deterministic for a fixed number of threads.}
+gradient descent. \code{"0.6"} is the modern pipeline added in umap-learn 0.6
+(\code{compatibility_layout = False} there): recursive initialisation and the
+Adam optimiser. It is faster, and deterministic for a fixed number of
+threads. Note that umap-learn 0.6 itself still uses the \code{"0.5"} pipeline
+by default.}
 
 \item{scale}{Standardise each feature to zero mean and unit variance
 before embedding? Recommended when features have different units.}
