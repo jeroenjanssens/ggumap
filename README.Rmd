@@ -82,6 +82,39 @@ umap_embed(iris, Sepal.Length:Petal.Width, seed = 1) |> head()
 
 See `vignette("ggumap")` for more.
 
+## Performance
+
+ggumap is much faster than the [umap](https://cran.r-project.org/package=umap)
+package, and on par with [uwot](https://cran.r-project.org/package=uwot):
+
+<img src="man/figures/README-benchmark.png" alt="Line chart of the time to compute a UMAP embedding with ggumap, uwot and umap, for 1,000 to 20,000 observations." width="100%" />
+
+```{r benchmark-table, echo = FALSE}
+res <- read.csv("bench/results/readme.csv")
+res <- res[res$n == max(res$n), ]
+res$implementation <- ifelse(
+  res$contender == "umap-naive",
+  "umap (pure R)",
+  paste0(sub("-0.5", "", res$contender), ", ", res$threads, ifelse(res$threads == 1, " thread", " threads"))
+)
+tab <- aggregate(cbind(seconds, trustworthiness) ~ implementation, res, stats::median)
+tab <- tab[order(tab$seconds), ]
+knitr::kable(
+  tab,
+  row.names = FALSE,
+  digits = c(0, 1, 3),
+  col.names = c("Implementation", "Seconds", "Trustworthiness"),
+  caption = sprintf("%s observations, median of %d runs.", format(max(res$n), big.mark = ","), max(res$rep))
+)
+```
+
+All three find embeddings of the same quality (trustworthiness measures how
+well the embedding preserves the nearest neighbours of the input). With one
+thread, uwot is somewhat faster than ggumap's default `flavour = "0.5"`; the
+`flavour = "0.6"` pipeline was two to three times as fast as the default at
+10,000 observations. See [`bench/`](https://github.com/jeroenjanssens/ggumap/tree/main/bench) for the methodology, and run
+`just bench-readme` to reproduce the figure on your machine.
+
 ## Acknowledgements
 
 The UMAP and nearest neighbour implementations are © Apple Inc. (MIT

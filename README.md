@@ -74,16 +74,43 @@ plot:
 
 ``` r
 umap_embed(iris, Sepal.Length:Petal.Width, seed = 1) |> head()
-#>      UMAP1     UMAP2  knn_dist
-#> 1 12.89850  9.066114 0.2206497
-#> 2 15.01168  8.909729 0.2788145
-#> 3 14.62423  8.497745 0.2883166
-#> 4 14.85246  8.678940 0.2761466
-#> 5 12.91833  8.970540 0.2452016
-#> 6 12.09575 10.244448 0.4382381
+#>      UMAP1    UMAP2  knn_dist
+#> 1 14.26603 5.340948 0.2206497
+#> 2 16.21539 5.682025 0.2788145
+#> 3 15.77085 6.046715 0.2883166
+#> 4 16.04808 5.891865 0.2761466
+#> 5 14.19883 5.123796 0.2452016
+#> 6 13.02840 5.360260 0.4382381
 ```
 
 See `vignette("ggumap")` for more.
+
+## Performance
+
+ggumap is much faster than the
+[umap](https://cran.r-project.org/package=umap) package, and on par with
+[uwot](https://cran.r-project.org/package=uwot):
+
+<img src="man/figures/README-benchmark.png" alt="Line chart of the time to compute a UMAP embedding with ggumap, uwot and umap, for 1,000 to 20,000 observations." width="100%" />
+
+| Implementation    | Seconds | Trustworthiness |
+|:------------------|--------:|----------------:|
+| ggumap, 8 threads |     1.3 |           0.956 |
+| uwot, 8 threads   |     1.4 |           0.955 |
+| uwot, 1 thread    |     5.3 |           0.956 |
+| ggumap, 1 thread  |     5.8 |           0.956 |
+| umap (pure R)     |    54.1 |           0.956 |
+
+20,000 observations, median of 3 runs.
+
+All three find embeddings of the same quality (trustworthiness measures
+how well the embedding preserves the nearest neighbours of the input).
+With one thread, uwot is somewhat faster than ggumap’s default
+`flavour = "0.5"`; the `flavour = "0.6"` pipeline was two to three times
+as fast as the default at 10,000 observations. See
+[`bench/`](https://github.com/jeroenjanssens/ggumap/tree/main/bench) for
+the methodology, and run `just bench-readme` to reproduce the figure on
+your machine.
 
 ## Acknowledgements
 

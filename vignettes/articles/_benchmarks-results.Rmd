@@ -1,0 +1,160 @@
+<!-- Included by benchmarks.Rmd when benchmark results exist. -->
+
+```{r setup-text, results = "asis"}
+cat(sprintf(
+  paste(
+    "These benchmarks compare ggumap with the other UMAP implementations",
+    "available to R users. They were run on %s (%s, %d cores, %s), R %s and %s,",
+    "with %d threads for every contender and %d repetitions per measurement.",
+    "All contenders use `n_neighbors = 15`, `min_dist = 0.1`, Euclidean",
+    "distance and their default number of epochs. See `bench/README.md` in the",
+    "source repository for the methodology.\n\n"
+  ),
+  machine$date, machine$cpu, machine$cores, machine$os, machine$r, machine$rustc,
+  max(res$threads[res$experiment == "datasets"]), max(res$rep)
+))
+knitr::kable(versions, row.names = FALSE, col.names = c("Contender", "Version"))
+```
+
+## Speed
+
+```{r speed}
+blobs <- summarise(subset(res, experiment == "datasets" & dataset == "blobs"), c("contender", "n"))
+ends <- do.call(rbind, lapply(split(blobs, blobs$contender, drop = TRUE), function(d) d[which.max(d$n), ]))
+
+ggplot(blobs, aes(n, seconds, colour = contender)) +
+  geom_line(linewidth = 0.7) +
+  geom_point(size = 2.2) +
+  geom_text(
+    data = ends, aes(label = contender), colour = "grey20",
+    hjust = 0, nudge_x = 0.06, size = 3.2
+  ) +
+  scale_x_log10(
+    labels = scales::label_number(scale_cut = scales::cut_short_scale()),
+    expand = expansion(mult = c(0.03, 0.3))
+  ) +
+  scale_y_log10(labels = scales::label_number(suffix = " s")) +
+  scale_colour_manual(values = palette) +
+  labs(
+    title = "Time to embed Gaussian blobs (50 dimensions)",
+    subtitle = "Median wall time per run, log scales. Lower is better.",
+    x = "Number of observations", y = NULL
+  ) +
+  theme_bench
+```
+
+```{r speed-table}
+tab <- summarise(subset(res, experiment == "datasets"), c("dataset", "n", "contender"))
+tab <- tab[order(tab$dataset, tab$n, tab$contender), ]
+wide <- stats::reshape(
+  tab[c("dataset", "n", "contender", "seconds")],
+  idvar = c("dataset", "n"), timevar = "contender", direction = "wide"
+)
+names(wide) <- sub("^seconds\\.", "", names(wide))
+knitr::kable(
+  wide, row.names = FALSE, digits = 2,
+  caption = "Median seconds per run, all datasets. Missing values: not run (umap-naive is limited to 20,000 rows)."
+)
+```
+
+## Thread scaling
+
+```{r scaling, eval = any(res$experiment == "scaling")}
+sc <- summarise(subset(res, experiment == "scaling"), c("contender", "threads"))
+base <- sc[sc$threads == 1, c("contender", "seconds")]
+names(base)[2] <- "base"
+sc <- merge(sc, base)
+sc$speedup <- sc$base / sc$seconds
+ends <- do.call(rbind, lapply(split(sc, sc$contender, drop = TRUE), function(d) d[which.max(d$threads), ]))
+
+ggplot(sc, aes(threads, speedup, colour = contender)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "grey70", linewidth = 0.4) +
+  geom_line(linewidth = 0.7) +
+  geom_point(size = 2.2) +
+  geom_text(data = ends, aes(label = contender), colour = "grey20", hjust = 0, nudge_x = 0.2, size = 3.2) +
+  scale_x_continuous(breaks = unique(sc$threads), expand = expansion(mult = c(0.03, 0.3))) +
+  scale_colour_manual(values = palette) +
+  labs(
+    title = sprintf("Speed-up over one thread (blobs, %s observations)", format(sc$n[1], big.mark = ",")),
+    subtitle = "Dashed line: perfect scaling.",
+    x = "Threads", y = "Speed-up"
+  ) +
+  theme_bench
+```
+
+## Memory
+
+```{r memory, fig.height = 3.5}
+big <- subset(res, experiment == "datasets")
+big <- big[big$n == max(big$n[big$dataset == "mnist"]) & big$dataset == "mnist", ]
+if (nrow(big) == 0) {
+  big <- subset(res, experiment == "datasets" & dataset == "blobs" & n == max(n))
+}
+mem <- summarise(big, c("contender"))
+mem$contender <- stats::reorder(mem$contender, mem$peak_mb)
+
+ggplot(mem, aes(peak_mb, contender, fill = contender)) +
+  geom_col(width = 0.6) +
+  geom_text(aes(label = paste(round(peak_mb), "MB")), hjust = -0.1, size = 3.2, colour = "grey20") +
+  scale_fill_manual(values = palette, guide = "none") +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
+  labs(
+    title = sprintf("Peak memory of the R process (%s, %s observations)", big$dataset[1], format(big$n[1], big.mark = ",")),
+    subtitle = "Resident set size, including R, the data and (for umap-learn) Python.",
+    x = NULL, y = NULL
+  ) +
+  theme_bench +
+  theme(panel.grid.major.y = element_blank())
+```
+
+## Quality
+
+Quality is measured on a random subsample of at most 5,000 points.
+*Trustworthiness* measures whether neighbours in the embedding are also
+neighbours in the input space; *kNN accuracy* is the accuracy of a 5-nearest
+neighbour vote on the known labels in the embedding. Equal values mean the
+implementations find embeddings of equal quality, as expected from faithful
+ports of the same algorithm.
+
+```{r quality, fig.height = 5}
+q <- summarise(subset(res, experiment == "datasets"), c("dataset", "n", "contender"))
+q$data <- ifelse(q$dataset %in% c("iris", "penguins"), q$dataset, paste0(q$dataset, " (", format(q$n, big.mark = ",", trim = TRUE), ")"))
+q$data <- factor(q$data, levels = unique(q$data[order(q$dataset, q$n)]))
+
+ggplot(q, aes(trustworthiness, contender, colour = contender)) +
+  geom_errorbarh(aes(xmin = trustworthiness - trust_sd, xmax = trustworthiness + trust_sd), height = 0, linewidth = 0.5) +
+  geom_point(size = 2.2) +
+  facet_wrap(vars(data), scales = "free_x", ncol = 3) +
+  scale_colour_manual(values = palette, guide = "none") +
+  labs(
+    title = "Trustworthiness (k = 15)",
+    subtitle = "Mean over repetitions, with one standard deviation. Higher is better.",
+    x = NULL, y = NULL
+  ) +
+  theme_bench +
+  theme(axis.text.x = element_text(size = 7))
+```
+
+```{r quality-table}
+qt <- q[order(q$data, q$contender), c("data", "contender", "trustworthiness", "knn_recall", "knn_accuracy")]
+knitr::kable(qt, row.names = FALSE, digits = 3, col.names = c("Data", "Contender", "Trustworthiness", "kNN recall", "kNN accuracy"))
+```
+
+## MNIST embeddings
+
+```{r mnist, eval = file.exists("benchmark-mnist-embeddings.csv"), fig.height = 6}
+emb <- read.csv("benchmark-mnist-embeddings.csv")
+emb$contender <- factor(emb$contender, levels = contenders)
+emb <- emb[!is.na(emb$contender), ]
+# Digits are labelled directly at their median position (10 classes exceed
+# the 8 categorical colours, so colour would not identify them reliably).
+centres <- stats::aggregate(cbind(x, y) ~ contender + label, data = emb, FUN = stats::median)
+
+ggplot(emb, aes(x, y)) +
+  geom_point(size = 0.05, alpha = 0.25, colour = "grey35") +
+  geom_label(data = centres, aes(label = label), size = 3, label.size = 0, fill = "white", alpha = 0.85) +
+  facet_wrap(vars(contender), scales = "free", ncol = 3) +
+  labs(title = "MNIST (70,000 digits), 10,000 points shown", x = NULL, y = NULL) +
+  theme_bench +
+  ggumap::theme_umap()
+```
