@@ -3,8 +3,32 @@
 on:
   push:
     branches: [main]
+    # Files that are not part of the package (all in .Rbuildignore): changing
+    # only these cannot affect the check, so do not spend runners on it.
+    paths-ignore:
+      - 'PLAN.md'
+      - 'CRAN-SUBMISSION'
+      - 'cran-comments.md'
+      - 'CODE_OF_CONDUCT.md'
+      - 'bench/**'
+      - 'dev/**'
+      - 'vignettes/articles/**'
+      - '_pkgdown.yml'
+      - 'justfile'
+      - '.github/workflows/rhub.yaml'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - 'PLAN.md'
+      - 'CRAN-SUBMISSION'
+      - 'cran-comments.md'
+      - 'CODE_OF_CONDUCT.md'
+      - 'bench/**'
+      - 'dev/**'
+      - 'vignettes/articles/**'
+      - '_pkgdown.yml'
+      - 'justfile'
+      - '.github/workflows/rhub.yaml'
   workflow_dispatch:
 
 name: test-coverage
