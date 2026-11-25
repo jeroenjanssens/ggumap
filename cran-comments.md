@@ -46,7 +46,8 @@ will not install. Supporting 1.84 would require patching Apple's code.
   number of threads, `umap_threads()`, is limited to 2 when
   `_R_CHECK_LIMIT_CORES_` is set and to `OMP_THREAD_LIMIT` when that is
   set. The tests and vignette use 1 thread.
-* The slowest example (`stat_umap()`) takes 0.6 s locally.
+* The slowest example (`stat_umap()`) takes 0.6 s locally and at most
+  4.6 s on win-builder.
 * Tests of interrupt handling (which need a child R process) and visual
   snapshot tests (whose floating-point output differs across platforms)
   are skipped on CRAN.
@@ -69,8 +70,9 @@ will not install. Supporting 1.84 would require patching Apple's code.
   it reports 165 bytes "definitely lost" in tests that raise errors on
   purpose, where extendr turns a Rust error into an R error with a
   longjmp over Rust frames.
-* win-builder R-release (4.6.2): 1 NOTE (new submission, and the words
-  explained below). R-devel: TODO.
+* win-builder: R-release (4.6.2) and R-devel (2026-11-17 r90926 ucrt):
+  1 NOTE each (new submission, and the words explained below); the
+  slowest example takes 2.4 s and 4.6 s there.
 
 ## R CMD check results
 

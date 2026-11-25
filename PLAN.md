@@ -60,8 +60,8 @@ Status legend: [x] done, [ ] to do, [~] needs Jeroen.
       gcc-asan, valgrind, rchk. All OK except nosuggests (container BLAS
       hangs on any matrix product; not ggumap, see log).
 - [x] 4.4 PDF manual in a Debian container (R-devel + TeX Live).
-- [~] 4.5 win-builder R-devel and R-release (uploaded 81b2d1f), mac-builder
-      (HTTP 502 three times; retry).
+- [x] 4.5 win-builder R-devel and R-release on 57c67e3: 1 NOTE each.
+      mac-builder: HTTP 502 three times (optional).
       [~] Results arrive by email at jeroen@jeroenjanssens.com: paste them.
 
 ## Phase 5: Submission
@@ -186,3 +186,7 @@ Status legend: [x] done, [ ] to do, [~] needs Jeroen.
   its logs). All jobs upload 00install.out. It passes on the pre-fix code
   too (temporary branch, deleted), so win-builder's os error 193 is
   machine-specific; win-builder stays the final check.
+* 2026-11-25: win-builder on the final code (57c67e3, uploaded over
+  HTTPS because this network blocks FTP): R-release and R-devel both
+  Status 1 NOTE (new submission + spelling). stat_umap examples 2.4 s
+  and 4.6 s, tests 69 s and 129 s. Ready to submit.
