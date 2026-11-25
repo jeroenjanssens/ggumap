@@ -67,16 +67,21 @@ jobs:
           path: check/*.Rcheck/00install.out
           if-no-files-found: warn
 
-  # Windows as on CRAN/win-builder: the Rust toolchain that ships with Rtools
-  # (not the newest Rust from rustup), and plain R CMD build/check without
-  # NOT_CRAN, so the package is built exactly as from the CRAN tarball.
-  windows-rtools-rust:
-    name: windows (release, Rtools' Rust)
+  # Windows as on CRAN/win-builder: the Rust version CRAN's Windows machines
+  # use (installed with rustup and pinned, 1.92 at the time of writing; not
+  # the newest), and plain R CMD build/check without NOT_CRAN, so the package
+  # is built exactly as from the CRAN tarball.
+  windows-cran-rust:
+    name: windows (release, CRAN's Rust 1.92)
     runs-on: windows-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@1.92
+        with:
+          targets: x86_64-pc-windows-gnu
 
       - uses: r-lib/actions/setup-pandoc@v2
 
@@ -84,15 +89,6 @@ jobs:
         with:
           r-version: release
           use-public-rspm: true
-
-      # The runner image has rustup in ~/.cargo, which tools/msrv.R would
-      # find; hide it so that only Rtools' Rust is available.
-      - name: Hide the runner's Rust
-        shell: bash
-        run: |
-          for d in .cargo .rustup; do
-            if [ -d "$HOME/$d" ]; then mv "$HOME/$d" "$HOME/$d-hidden"; fi
-          done
 
       - name: Show the Rust toolchain R finds
         shell: Rscript {0}
@@ -122,7 +118,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: install-log-windows-rtools-rust
+          name: install-log-windows-cran-rust
           path: |
             ggumap.Rcheck/00install.out
             ggumap.Rcheck/00check.log
