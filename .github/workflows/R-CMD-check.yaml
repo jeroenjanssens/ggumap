@@ -69,8 +69,8 @@ jobs:
 
   # Windows as on CRAN/win-builder: the Rust version CRAN's Windows machines
   # use (installed with rustup and pinned, 1.92 at the time of writing; not
-  # the newest), and plain R CMD build/check without NOT_CRAN, so the package
-  # is built exactly as from the CRAN tarball.
+  # the newest), with the GNU host, and plain R CMD build/check without
+  # NOT_CRAN, so the package is built exactly as from the CRAN tarball.
   windows-cran-rust:
     name: windows (release, CRAN's Rust 1.92)
     runs-on: windows-latest
@@ -79,9 +79,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@1.92
-        with:
-          targets: x86_64-pc-windows-gnu
+      # As on CRAN: the GNU host toolchain (build scripts are linked with
+      # Rtools' gcc, like the package), not the runner's default MSVC host.
+      - name: Install CRAN's Rust (1.92, GNU host)
+        shell: bash
+        run: |
+          rustup toolchain install 1.92.0-x86_64-pc-windows-gnu --profile minimal
+          rustup default 1.92.0-x86_64-pc-windows-gnu
+          rustc -vV
 
       - uses: r-lib/actions/setup-pandoc@v2
 
