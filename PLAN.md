@@ -190,3 +190,8 @@ Status legend: [x] done, [ ] to do, [~] needs Jeroen.
   HTTPS because this network blocks FTP): R-release and R-devel both
   Status 1 NOTE (new submission + spelling). stat_umap examples 2.4 s
   and 4.6 s, tests 69 s and 129 s. Ready to submit.
+* 2026-11-25: R-hub on the final code (5938bd7; clang22 on 97a98cd): OK on
+  linux, windows, macos-arm64, m1-san, gcc16, lto, gcc-asan, clang-asan,
+  clang-ubsan, rchk, vnu, valgrind (same 165-byte extendr leak) and
+  clang22. clang23 failed twice while installing dependencies (R-hub's
+  xfun/processx binaries need ASan symbols), not in ggumap.

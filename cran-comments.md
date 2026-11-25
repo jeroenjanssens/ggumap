@@ -66,8 +66,11 @@ will not install. Supporting 1.84 would require patching Apple's code.
   version and toolchain of CRAN's Windows machines (1.92,
   x86_64-pc-windows-gnu host), built and checked as from the tarball.
 * R-hub (R-devel), Status: OK on linux, windows, macos-arm64, m1-san,
-  gcc16, clang23, lto, gcc-asan, clang-asan, clang-ubsan, rchk, vnu and
-  valgrind. The sanitizer builds report no runtime errors. valgrind
+  gcc16, clang22, lto, gcc-asan, clang-asan, clang-ubsan, rchk, vnu and
+  valgrind. The sanitizer builds report no runtime errors. (R-hub's
+  clang23 container could not install the dependencies at the time: its
+  binaries of xfun and processx need ASan symbols; clang22 was used
+  instead.) valgrind
   reports no invalid reads or writes and no use of uninitialised values;
   it reports 165 bytes "definitely lost" in tests that raise errors on
   purpose, where extendr turns a Rust error into an R error with a
