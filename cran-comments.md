@@ -61,8 +61,10 @@ will not install. Supporting 1.84 would require patching Apple's code.
 * Debian container (R 4.6.2, TeX Live 2026/Debian): `R CMD Rd2pdf` of the
   PDF manual (exit status 0, 40 KB of LaTeX output).
 * GitHub Actions: macOS (R release), Windows (R release), Ubuntu (R devel,
-  release and oldrel-1), and Ubuntu with rustc 1.90 (the declared minimum)
-  installing offline from the vendored crates.
+  release and oldrel-1), Ubuntu with rustc 1.90 (the declared minimum)
+  installing offline from the vendored crates, and Windows with the Rust
+  version and toolchain of CRAN's Windows machines (1.92,
+  x86_64-pc-windows-gnu host), built and checked as from the tarball.
 * R-hub (R-devel), Status: OK on linux, windows, macos-arm64, m1-san,
   gcc16, clang23, lto, gcc-asan, clang-asan, clang-ubsan, rchk, vnu and
   valgrind. The sanitizer builds report no runtime errors. valgrind
