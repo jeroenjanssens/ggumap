@@ -176,3 +176,13 @@ Status legend: [x] done, [ ] to do, [~] needs Jeroen.
   set. CRAN-style install now 24 s instead of ~50 s. NOTE: possibly
   misspelled Healy, McInnes, UMAP, embeddings (explained in
   cran-comments.md).
+* 2026-11-25: win-builder R-release on fb3034f: installs, Status 1 NOTE
+  (new submission + spelling). But stat_umap examples took 7.2 s there
+  (win-builder ~6.5x slower than local). Examples reduced to 2 UMAP
+  computations and 3 plots (umap_embed + geom_bin_2d moved to umap_embed's
+  examples): locally 1.43 -> 0.70 s CPU, 1.10 -> 0.60 s elapsed.
+* 2026-11-25: new CI job "windows (release, CRAN's Rust 1.92)": GNU host
+  toolchain 1.92, plain R CMD build/check without NOT_CRAN (verified in
+  its logs). All jobs upload 00install.out. It passes on the pre-fix code
+  too (temporary branch, deleted), so win-builder's os error 193 is
+  machine-specific; win-builder stays the final check.

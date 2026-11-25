@@ -203,42 +203,24 @@ parallel and not bit-for-bit reproducible across sessions; use
 library(ggplot2)
 penguins <- na.omit(palmerpenguins::penguins)
 
-# All numeric columns are features by default; standardise them, since
-# they are measured in different units
+# Select the features (all numeric columns by default), standardise them,
+# since they are measured in different units, and remove the meaningless
+# axes
 ggplot(penguins, aes(colour = species)) +
-  geom_umap(scale = TRUE)
-
-# Select features explicitly, tune UMAP and remove the meaningless axes
-ggplot(penguins, aes(colour = species)) +
-  geom_umap(
-    features = bill_length_mm:body_mass_g,
-    scale = TRUE,
-    n_neighbors = 30,
-    min_dist = 0.5
-  ) +
+  geom_umap(features = bill_length_mm:body_mass_g, scale = TRUE) +
   theme_umap()
+
+# One embedding, faceted (reuses the embedding computed above)
+ggplot(penguins, aes(colour = species)) +
+  geom_umap(features = bill_length_mm:body_mass_g, scale = TRUE) +
+  facet_wrap(vars(species))
 
 # Several layers share one embedding
 ggplot(mtcars, aes(label = rownames(mtcars), colour = factor(cyl))) +
   geom_umap(scale = TRUE, n_neighbors = 5) +
   stat_umap(geom = "text", scale = TRUE, n_neighbors = 5, vjust = -0.6, size = 3)
 
-# Colour by computed variables
-ggplot(penguins) +
-  geom_umap(aes(colour = after_stat(knn_dist)), scale = TRUE)
-
-# One embedding, faceted
-ggplot(penguins, aes(colour = species)) +
-  geom_umap(scale = TRUE) +
-  facet_wrap(vars(species))
-
-# Geoms with their own statistic (densities, binning) need umap_embed()
-emb <- umap_embed(penguins, scale = TRUE, seed = 1)
-ggplot(emb, aes(UMAP1, UMAP2)) +
-  geom_bin_2d(bins = 20)
-\dontshow{\}) # examplesIf}
-\dontshow{if (rlang::is_installed(c("palmerpenguins", "MASS"))) withAutoprint(\{ # examplesIf}
-ggplot(emb, aes(UMAP1, UMAP2)) +
-  geom_density_2d_filled(contour_var = "ndensity")
+# Geoms with their own statistic (densities, binning) need umap_embed();
+# see its examples
 \dontshow{\}) # examplesIf}
 }

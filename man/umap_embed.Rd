@@ -94,6 +94,12 @@ emb <- umap_embed(
 )
 head(emb)
 
+# Use the embedding with geoms that compute their own statistic, which
+# stat_umap() cannot do
+library(ggplot2)
+ggplot(emb, aes(UMAP1, UMAP2)) +
+  geom_bin_2d(bins = 20)
+
 # Matrices work too
 x <- as.matrix(penguins[c("bill_length_mm", "bill_depth_mm")])
 emb <- umap_embed(x, scale = TRUE, seed = 1, n_threads = 1)
