@@ -199,3 +199,7 @@ Status legend: [x] done, [ ] to do, [~] needs Jeroen.
   --as-cran 0 errors/0 warnings). Waiting for the maintainer to click the
   confirmation link in CRAN's email; then CRAN's checks and review.
 * 2026-11-25: the maintainer confirmed the submission.
+* 2026-11-25: CRAN pre-tests passed, pending manual inspection. Debian
+  (r-devel gcc, rustc 1.98.1) and Windows (r-devel): Status 1 NOTE each
+  (new submission + the 4 explained words). Debian: install 47 s,
+  examples 4 s, tests 26 s, vignette 7 s, PDF manual OK.
