@@ -203,3 +203,6 @@ Status legend: [x] done, [ ] to do, [~] needs Jeroen.
   (r-devel gcc, rustc 1.98.1) and Windows (r-devel): Status 1 NOTE each
   (new submission + the 4 explained words). Debian: install 47 s,
   examples 4 s, tests 26 s, vignette 7 s, PDF manual OK.
+* 2026-11-25: R CMD check and test coverage no longer run for commits
+  that only change files outside the package (paths-ignore, ccf5844),
+  after three red runs caused by GitHub not providing a macOS runner.
