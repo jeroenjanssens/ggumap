@@ -69,7 +69,7 @@ Status legend: [x] done, [ ] to do, [~] needs Jeroen.
 - [x] 5.1 cran-comments.md in raylibr's structure: submission, bundled
       code, Rust, examples/tests/threads, test environments with exact
       versions, results.
-- [x] 5.2 Submitted (2026-11-25, 0fbba8b). [~] Click the confirmation email.
+- [x] 5.2 Submitted (2026-11-25, 0fbba8b) and confirmed by the maintainer.
 - [~] 5.3 Answer reviewers. Every resubmission bumps the version
       (0.1.1, ...) and gets a "Resubmission" section; never move tags.
 - [ ] 5.4 After acceptance: tag v0.1.0, GitHub release,
@@ -198,3 +198,4 @@ Status legend: [x] done, [ ] to do, [~] needs Jeroen.
 * 2026-11-25: submitted 0.1.0 to CRAN from 0fbba8b (all CI green, local
   --as-cran 0 errors/0 warnings). Waiting for the maintainer to click the
   confirmation link in CRAN's email; then CRAN's checks and review.
+* 2026-11-25: the maintainer confirmed the submission.
