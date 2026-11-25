@@ -15,6 +15,7 @@ knitr::opts_chunk$set(
 ```{r setup, message = FALSE}
 library(ggplot2)
 library(ggumap)
+library(patchwork)
 ```
 
 This article shows how the main parameters of `stat_umap()`, `geom_umap()`
@@ -114,16 +115,9 @@ standardises every feature first.
 ```{r scaling, fig.height = 3.2}
 penguins <- palmerpenguins::penguins
 p <- ggplot(penguins, aes(colour = species)) + theme_umap()
-patch <- list(
-  p + geom_umap(features = bill_length_mm:body_mass_g, na.rm = TRUE) + ggtitle("scale = FALSE"),
-  p + geom_umap(features = bill_length_mm:body_mass_g, scale = TRUE, na.rm = TRUE) + ggtitle("scale = TRUE")
-)
-has_patchwork <- requireNamespace("patchwork", quietly = TRUE)
-if (has_patchwork) {
-  patchwork::wrap_plots(patch, guides = "collect")
-} else {
-  for (pl in patch) print(pl)
-}
+unscaled <- p + geom_umap(features = bill_length_mm:body_mass_g, na.rm = TRUE) + ggtitle("scale = FALSE")
+scaled <- p + geom_umap(features = bill_length_mm:body_mass_g, scale = TRUE, na.rm = TRUE) + ggtitle("scale = TRUE")
+unscaled + scaled + plot_layout(guides = "collect")
 ```
 
 ## Advanced settings
