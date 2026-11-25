@@ -33,6 +33,10 @@ if (!is_not_cran) {
   ""
 )
 
+# Regenerate the R wrappers (cargo run --bin document) only in development
+# builds; installations from the package tarball use the committed wrappers.
+.generate_wrappers <- ifelse(is_not_cran, "yes", "no")
+
 # when DEBUG env var is present we use `--debug` build
 .profile <- ifelse(is_debug, "", "--release")
 .clean_targets <- ifelse(is_debug, "", "$(TARGET_DIR)")
@@ -102,7 +106,8 @@ new_txt <- gsub("@CRAN_FLAGS@", .cran_flags, mv_txt) |>
   gsub("@CLEAN_TARGET@", .clean_targets, x = _) |>
   gsub("@LIBDIR@", .libdir, x = _) |>
   gsub("@TARGET@", .target, x = _) |>
-  gsub("@PANIC_EXPORTS@", .panic_exports, x = _)
+  gsub("@PANIC_EXPORTS@", .panic_exports, x = _) |>
+  gsub("@GENERATE_WRAPPERS@", .generate_wrappers, x = _)
 
 message("Writing `", mv_ofp, "`.")
 con <- file(mv_ofp, open = "wb")

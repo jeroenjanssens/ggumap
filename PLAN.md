@@ -46,8 +46,8 @@ Status legend: [x] done, [ ] to do, [~] needs Jeroen.
       needs 1.90, `wide`/`safe_arch` 1.89).
 - [x] 3.3 Re-check that installation leaves no `src/.cargo`, `src/vendor`
       or `src/rust/target` behind and never touches the network.
-- [ ] 3.4 (Open question, not changed) `cargo run --bin document` at
-      install time: keep for now, as in the rextendr template.
+- [x] 3.4 `cargo run --bin document` at install time: now development builds
+      only (it broke the win-builder install; see log).
 
 ## Phase 4: Checks
 
@@ -169,3 +169,10 @@ Status legend: [x] done, [ ] to do, [~] needs Jeroen.
   Rust). ggumap re-measured in both suites (on battery, as agreed): MNIST
   70k extra memory 2.3 GB -> 0.7-0.8 GB, peak 3.1 GB -> 1.3-1.4 GB (now
   the lowest of all contenders); times and quality unchanged.
+* 2026-11-25: win-builder (R-release 4.6.2 and R-devel r90926, uploads of
+  81b2d1f): install ERROR in `cargo run --bin document` (debug build
+  script "is not a valid Win32 application", os error 193); the release
+  build itself succeeded. Fix: the document step only runs with NOT_CRAN
+  set. CRAN-style install now 24 s instead of ~50 s. NOTE: possibly
+  misspelled Healy, McInnes, UMAP, embeddings (explained in
+  cran-comments.md).

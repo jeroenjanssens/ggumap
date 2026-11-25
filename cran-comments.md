@@ -20,6 +20,9 @@ function, `umap_embed()`, that returns the embedding as a data frame.
   `inst/AUTHORS` (see the Copyright field), and in Authors@R as "Authors of
   the dependency Rust crates" (role "ctb"). `LICENSE.note` explains the
   licensing. All crates are available under the MIT licence.
+* The R wrappers of the Rust functions are committed
+  (`R/extendr-wrappers.R`); they are only regenerated in development builds
+  (`NOT_CRAN` set), so installation compiles the Rust code once.
 * The build follows CRAN's policy for Rust: it runs offline (`--offline`)
   with at most 2 jobs (`-j 2`), `CARGO_HOME` is a temporary directory in
   `src/` that is removed after the build, the vendored sources and the
@@ -73,3 +76,7 @@ will not install. Supporting 1.84 would require patching Apple's code.
 0 errors | 0 warnings | 1 note
 
 * This is a new submission.
+* Possibly misspelled words in DESCRIPTION: "Healy" and "McInnes" are the
+  names of the authors of the cited UMAP paper, "UMAP" is the name of the
+  method (spelled out in the Description), and "embeddings" is the
+  standard term for its results.
