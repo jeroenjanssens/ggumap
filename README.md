@@ -58,11 +58,11 @@ pak::pak("jeroenjanssens/ggumap")
 cars <- transform(mtcars, model = rownames(mtcars))
 
 ggplot(cars, aes(label = model, colour = factor(cyl))) +
-  geom_umap(scale = TRUE, n_neighbors = 5) +
-  stat_umap(geom = "text", scale = TRUE, n_neighbors = 5,
-            size = 2.5, vjust = -0.8, show.legend = FALSE,
+  geom_umap(scale = TRUE, n_neighbors = 5, min_dist = 1) +
+  stat_umap(geom = "text", scale = TRUE, n_neighbors = 5, min_dist = 1,
+            size = 2.5, hjust = -0.12, show.legend = FALSE,
             check_overlap = TRUE) +
-  scale_x_continuous(expand = expansion(mult = 0.15)) +
+  scale_x_continuous(expand = expansion(mult = c(0.05, 0.25))) +
   labs(colour = "cylinders") +
   theme_umap()
 ```
@@ -75,13 +75,13 @@ plot:
 ``` r
 penguins <- na.omit(palmerpenguins::penguins)
 umap_embed(penguins, bill_length_mm:body_mass_g, scale = TRUE, seed = 1) |> head()
-#>       UMAP1    UMAP2  knn_dist
-#> 1  8.797668 2.989627 0.4842742
-#> 2  7.851410 3.140680 0.4916678
-#> 3  7.228579 2.900652 0.5714622
-#> 4  8.996132 1.971760 0.5629448
-#> 5 10.241680 1.819770 0.6880632
-#> 6  8.133076 2.987497 0.4997849
+#>      UMAP1    UMAP2  knn_dist
+#> 1 8.951698 7.911100 0.4842742
+#> 2 8.656451 8.798175 0.4916678
+#> 3 8.313984 9.207904 0.5714622
+#> 4 8.232854 7.165707 0.5629448
+#> 5 8.972029 5.958261 0.6880632
+#> 6 8.726288 8.545345 0.4997849
 ```
 
 See `vignette("ggumap")` for more.
