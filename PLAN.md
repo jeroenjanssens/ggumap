@@ -69,7 +69,7 @@ Status legend: [x] done, [ ] to do, [~] needs Jeroen.
 - [x] 5.1 cran-comments.md in raylibr's structure: submission, bundled
       code, Rust, examples/tests/threads, test environments with exact
       versions, results.
-- [~] 5.2 `devtools::submit_cran()` and click the confirmation email.
+- [x] 5.2 Submitted (2026-11-25, 0fbba8b). [~] Click the confirmation email.
 - [~] 5.3 Answer reviewers. Every resubmission bumps the version
       (0.1.1, ...) and gets a "Resubmission" section; never move tags.
 - [ ] 5.4 After acceptance: tag v0.1.0, GitHub release,
@@ -195,3 +195,6 @@ Status legend: [x] done, [ ] to do, [~] needs Jeroen.
   clang-ubsan, rchk, vnu, valgrind (same 165-byte extendr leak) and
   clang22. clang23 failed twice while installing dependencies (R-hub's
   xfun/processx binaries need ASan symbols), not in ggumap.
+* 2026-11-25: submitted 0.1.0 to CRAN from 0fbba8b (all CI green, local
+  --as-cran 0 errors/0 warnings). Waiting for the maintainer to click the
+  confirmation link in CRAN's email; then CRAN's checks and review.
