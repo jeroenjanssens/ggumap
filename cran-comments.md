@@ -70,11 +70,10 @@ will not install. Supporting 1.84 would require patching Apple's code.
   valgrind. The sanitizer builds report no runtime errors. (R-hub's
   clang23 container could not install the dependencies at the time: its
   binaries of xfun and processx need ASan symbols; clang22 was used
-  instead.) valgrind
-  reports no invalid reads or writes and no use of uninitialised values;
-  it reports 165 bytes "definitely lost" in tests that raise errors on
-  purpose, where extendr turns a Rust error into an R error with a
-  longjmp over Rust frames.
+  instead.) valgrind reports no invalid reads or writes and no use of
+  uninitialised values; it reports 165 bytes "definitely lost" in tests
+  that raise errors on purpose, where extendr turns a Rust error into an
+  R error with a longjmp over Rust frames.
 * win-builder: R-release (4.6.2) and R-devel (2026-11-17 r90926 ucrt):
   1 NOTE each (new submission, and the words explained below); the
   slowest example takes 2.4 s and 4.6 s there.
