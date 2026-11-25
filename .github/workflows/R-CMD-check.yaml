@@ -57,6 +57,77 @@ jobs:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
 
+      # The installation log is not shown when the check passes; keep it, to
+      # see what the build actually did (cargo/rustc versions, CRAN flags).
+      - name: Upload the installation log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: install-log-${{ matrix.config.os }}-${{ matrix.config.r }}
+          path: check/*.Rcheck/00install.out
+          if-no-files-found: warn
+
+  # Windows as on CRAN/win-builder: the Rust toolchain that ships with Rtools
+  # (not the newest Rust from rustup), and plain R CMD build/check without
+  # NOT_CRAN, so the package is built exactly as from the CRAN tarball.
+  windows-rtools-rust:
+    name: windows (release, Rtools' Rust)
+    runs-on: windows-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+
+      # The runner image has rustup in ~/.cargo, which tools/msrv.R would
+      # find; hide it so that only Rtools' Rust is available.
+      - name: Hide the runner's Rust
+        shell: bash
+        run: |
+          for d in .cargo .rustup; do
+            if [ -d "$HOME/$d" ]; then mv "$HOME/$d" "$HOME/$d-hidden"; fi
+          done
+
+      - name: Show the Rust toolchain R finds
+        shell: Rscript {0}
+        run: |
+          print(Sys.which(c("cargo", "rustc")))
+          system("cargo --version")
+          system("rustc --version")
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          needs: check
+
+      - name: R CMD build and check, as on CRAN
+        shell: bash
+        run: |
+          unset NOT_CRAN
+          export _R_CHECK_LIMIT_CORES_=TRUE
+          R CMD build --no-manual .
+          R CMD check --as-cran --no-manual ggumap_*.tar.gz || true
+          echo "::group::Build steps from 00install.out"
+          grep -E "Using (cargo|rustc)|Building for CRAN|if \[ \"|Finished|ERROR|error" ggumap.Rcheck/00install.out || true
+          echo "::endgroup::"
+          tail -n 25 ggumap.Rcheck/00check.log
+          if grep -qE "^Status: .*(ERROR|WARNING)" ggumap.Rcheck/00check.log; then exit 1; fi
+
+      - name: Upload the check logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: install-log-windows-rtools-rust
+          path: |
+            ggumap.Rcheck/00install.out
+            ggumap.Rcheck/00check.log
+          if-no-files-found: warn
+
   # Install with the minimum supported Rust version (SystemRequirements in
   # DESCRIPTION), offline from the vendored crates, as on CRAN.
   msrv:
